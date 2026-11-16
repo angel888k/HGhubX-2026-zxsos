@@ -46,7 +46,10 @@ function syncBackground() {
     if (!previousInert.has(element)) previousInert.set(element, element.inert);
     element.inert = true;
   }
-  layers.forEach((layer, index) => layer.element.style.setProperty("--ios-overlay-order", String(index)));
+  layers.forEach((layer, index) => {
+    layer.element.style.setProperty("--ios-overlay-order", String(index));
+    layer.panel.setAttribute("data-tv-active-scope", String(layer === top));
+  });
   if (!top) { backgroundObserver?.disconnect(); backgroundObserver = null; return; }
   if (!backgroundObserver) {
     backgroundObserver = new MutationObserver(records => {
@@ -125,6 +128,7 @@ function DialogFrame({ open, onClose, children, kind, width, label, z }: {
       removeBack();
       const index = layers.indexOf(layer);
       if (index !== -1) layers.splice(index, 1);
+      panel.removeAttribute("data-tv-active-scope");
       // A parent may unmount while a child remains open; retain the original opener.
       for (const remaining of layers) {
         if (remaining.previous && element.contains(remaining.previous)) remaining.previous = layer.previous;

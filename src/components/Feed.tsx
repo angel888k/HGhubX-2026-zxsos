@@ -22,6 +22,7 @@ import { PreferenceStorageNotice } from "./PreferenceStorageNotice";
 import MobileHoldGuide from "./MobileHoldGuide";
 import { getHoldZone, HOLD_DELAY_MS, HOLD_LOCK_DISTANCE, type HoldZone } from "../mobileHold";
 import { useMobileHoldGuide } from "../useMobileHoldGuide";
+import { useTvNavigation } from "../tvNavigation";
 import {
   IBack, IBoltF, IChevR, IChevronDown, IChevronUp, IClose, ICommentF, ICompress, IExpand, IFileText, IHeart, IHeartF, IMore,
   ILink, IList, ILockF, IPauseF, IPlayF, ISearch, IStar, IStarF, IVertSwap, IVol, IVolMute,
@@ -47,6 +48,7 @@ export default function Feed({ videoIds, startIndex = 0, title = "", mode, kind 
   const store = useStore();
   const { isLiked, isFav, setLiked, setCollected, setFollowing, actionPending, accountScope, muted, setMuted, volume, setVolume, toast, addHistory, user, setLoginOpen, swipeEp, setSwipeEp, preferHevc, setPreferHevc } = store;
   const isDesktop = !isMobile;
+  const tvNavigation = useTvNavigation();
   const holdGuide = useMobileHoldGuide();
   const contentPreferences = useContentPreferences();
   const { preferences, revision, blockReason } = contentPreferences;
@@ -171,6 +173,9 @@ export default function Feed({ videoIds, startIndex = 0, title = "", mode, kind 
   useEffect(() => {
     if (paused) { setIdle(false); window.clearTimeout(idleTimer.current); }
   }, [paused]);
+  useEffect(() => {
+    if (tvNavigation) { setIdle(false); window.clearTimeout(idleTimer.current); }
+  }, [tvNavigation]);
   const [fullscreen, setFullscreen] = useState(false);
   const [heartBurst, setHeartBurst] = useState(0);
   /* —— 移动端手势 —— */
@@ -403,8 +408,16 @@ export default function Feed({ videoIds, startIndex = 0, title = "", mode, kind 
     const el = boxRef.current;
     if (!el) return;
     const next = Math.max(0, Math.min(effectiveVideoIds.length - 1, index + delta));
+    if (tvNavigation) {
+      // Immersive mode hides other sections, so it has no scroll offset to seek.
+      // Remote activation changes the anchored item directly in either mode.
+      setIndex(next);
+      setRenderIndex(next);
+      if (onNearEnd && mode === "home" && next >= effectiveVideoIds.length - 3) onNearEnd();
+      return;
+    }
     el.scrollTo({ top: next * el.clientHeight, behavior: "smooth" });
-  }, [index, effectiveVideoIds.length]);
+  }, [index, effectiveVideoIds.length, tvNavigation, setIndex, onNearEnd, mode]);
 
   /* 统一的上下切换：swipeEp 开启且为多集视频时优先切集，否则切剧。
      桌面端键盘 ↑↓ 与右侧按钮都走这里，和移动端上下划手势保持一致。 */
@@ -1157,7 +1170,7 @@ export default function Feed({ videoIds, startIndex = 0, title = "", mode, kind 
                 <div ref={holdTargetRef} data-mobile-hold-target={!isDesktop || undefined}
                   className="absolute inset-0" style={{ touchAction: swipeEp ? "none" : "pan-y" }}
                   onPointerDown={onDown} onPointerMove={onMove} onPointerUp={(e) => onUp(false, e)} onPointerCancel={(e) => onUp(true, e)} onLostPointerCapture={(e) => onUp(true, e)}>
-                <div style={{ position: "absolute", inset: 0, transform: isDesktop ? undefined : `translate3d(${zoom.x}px, ${zoom.y}px, 0) scale(${zoom.s})`, transformOrigin: "center center", transition: isDesktop || zoom.g ? "none" : "transform .18s ease-out" }}>
+                <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, transform: isDesktop ? undefined : `translate3d(${zoom.x}px, ${zoom.y}px, 0) scale(${zoom.s})`, transformOrigin: "center center", transition: isDesktop || zoom.g ? "none" : "transform .18s ease-out" }}>
                 <VideoSurface ref={videoRef} src={playUrl} poster={posterUrl} autoPlay active={active && !tagMenu && !showHoldGuide} muted={muted}
                   diagnosticContext={{ active: active && !tagMenu && !showHoldGuide, view: mode, kind, video_id: curId, episode: curEp }}
                   volume={volume} rate={effRate}
@@ -1488,6 +1501,21 @@ export default function Feed({ videoIds, startIndex = 0, title = "", mode, kind 
           );
         })}
       </div>
+
+      {/* Android remote controls stay on the left, clear of the social rail. */}
+      {tvNavigation && !isDesktop && active && allowed && !controlsLocked && !panel && !tagMenu && !showHoldGuide && (
+        <div className="tv-playback-controls" role="group" aria-label="遥控器播放控制">
+          <Button onClick={() => stepDir(-1)} disabled={!canStep(-1)} aria-label="上一个" className="hg-chip-strong pressable">
+            <IChevronUp size={18} /><span>上一个</span>
+          </Button>
+          <Button onClick={() => videoRef.current?.toggle()} disabled={!playUrl || !!err} aria-label={paused ? "播放" : "暂停"} className="hg-chip-strong pressable">
+            {paused ? <IPlayF size={18} /> : <IPauseF size={18} />}<span>{paused ? "播放" : "暂停"}</span>
+          </Button>
+          <Button onClick={() => stepDir(1)} disabled={!canStep(1)} aria-label="下一个" className="hg-chip-strong pressable">
+            <IChevronDown size={18} /><span>下一个</span>
+          </Button>
+        </div>
+      )}
 
       {/* 桌面控制条 */}
       {isDesktop && (
