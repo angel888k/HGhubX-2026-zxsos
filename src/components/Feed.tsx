@@ -22,7 +22,7 @@ import { PreferenceStorageNotice } from "./PreferenceStorageNotice";
 import MobileHoldGuide from "./MobileHoldGuide";
 import { getHoldZone, HOLD_DELAY_MS, HOLD_LOCK_DISTANCE, type HoldZone } from "../mobileHold";
 import { useMobileHoldGuide } from "../useMobileHoldGuide";
-import { useTvNavigation } from "../tvNavigation";
+import { isTvNavigationActive, useTvNavigation } from "../tvNavigation";
 import {
   IBack, IBoltF, IChevR, IChevronDown, IChevronUp, IClose, ICommentF, ICompress, IExpand, IFileText, IHeart, IHeartF, IMore,
   ILink, IList, ILockF, IPauseF, IPlayF, ISearch, IStar, IStarF, IVertSwap, IVol, IVolMute,
@@ -161,6 +161,7 @@ export default function Feed({ videoIds, startIndex = 0, title = "", mode, kind 
     setIdle(false);
     window.clearTimeout(idleTimer.current);
     idleTimer.current = window.setTimeout(() => {
+      if (isTvNavigationActive()) return;
       // Keyboard users must keep seeing the focused control/menu.
       if (!boxRef.current?.parentElement?.contains(document.activeElement) || !document.activeElement?.closest(".desktop-controls")) setIdle(true);
     }, 2800);
@@ -409,6 +410,7 @@ export default function Feed({ videoIds, startIndex = 0, title = "", mode, kind 
     if (!el) return;
     const next = Math.max(0, Math.min(effectiveVideoIds.length - 1, index + delta));
     if (tvNavigation) {
+      window.clearTimeout(swipeTimer.current);
       // Immersive mode hides other sections, so it has no scroll offset to seek.
       // Remote activation changes the anchored item directly in either mode.
       setIndex(next);
