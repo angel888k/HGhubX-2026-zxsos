@@ -25,7 +25,7 @@ export default defineConfig({
   },
   envPrefix: ["VITE_", "TAURI_ENV_*"],
   build: {
-    target: ["chrome66", "safari13"],
+    target: ["chrome66", "safari14.1"],
     cssTarget: ["chrome66", "safari13"],
     cssCodeSplit: false,
     // legacyCss performs the final minification after compatibility transforms.
