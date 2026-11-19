@@ -190,6 +190,7 @@ type Store = {
   /** 记一条观看记录；`ep/t/dur` 省略时保留原进度，`ep` 变了就把进度归零 */
   addHistory: (id: number, ep?: number, t?: number, dur?: number) => void;
   clearHistory: () => Promise<void>;
+  removeHistory: (ids: number[]) => Promise<void>;
   toggleFollowLocal: (uid: number) => boolean;
   theater: boolean; setTheater: (v: boolean | ((p: boolean) => boolean)) => void;
   fs: boolean; setFs: (v: boolean | ((p: boolean) => boolean)) => void;
@@ -509,7 +510,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     isLiked: account.isLiked, isFav: account.isFav,
     setCollected: account.setCollected, setLiked: account.setLiked, setFollowing: account.setFollowing, actionPending: account.actionPending,
     toggleLikeLocal: account.toggleLikeLocal, toggleFavLocal: account.toggleFavLocal, toggleFollowLocal: account.toggleFollowLocal,
-    addHistory: account.addHistory, clearHistory: account.clearHistory,
+    addHistory: account.addHistory, clearHistory: account.clearHistory, removeHistory: account.removeHistory,
     muted: p.muted, setMuted, volume: p.volume, setVolume, theater, setTheater, fs, setFs, clean, setClean, locked, setLocked,
     muteOnStartup: p.muteOnStartup, setMuteOnStartup,
     swipeEp: p.swipeEp, setSwipeEp,
