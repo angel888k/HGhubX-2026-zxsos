@@ -289,6 +289,7 @@ export function FeedPlayerShellChrome({
               rate={rate} onRate={(value) => { setRate(value); videoRef.current?.rate(value); }}
               preferHevc={preferHevc} onPreferHevc={setPreferHevc}
               portraitFit={portraitFit} onPortraitFit={setPortraitFit}
+              onLock={() => { setPanel(null); lockControls(); }}
               onClose={() => setPanel(null)} />
           </Sheet>
 

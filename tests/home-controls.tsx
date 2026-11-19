@@ -35,6 +35,7 @@ function Probe() {
   const [muted, setMuted] = useState(true);
   const [openedTag, setOpenedTag] = useState("");
   const [fullscreen, setFullscreen] = useState<boolean | null>(null);
+  const [locked, setLocked] = useState(false);
   const openTagMenu = (selected: string[] = []) => {
     setTagSelection(selected);
     setPanel(null);
@@ -51,6 +52,7 @@ function Probe() {
         muted: () => muted,
         openedTag: () => openedTag,
         fullscreen: () => fullscreen,
+        locked: () => locked,
         tagSelection: () => tagSelection,
       },
     });
@@ -80,7 +82,8 @@ function Probe() {
     <Sheet open={panel === "more"} label="播放设置" z="playback-settings-overlay" onClose={() => setPanel(null)}>
       <PlaybackSettingsPanel
         rate={rate} onRate={setRate} preferHevc={preferHevc} onPreferHevc={setPreferHevc}
-        portraitFit={portraitFit} onPortraitFit={setPortraitFit} onClose={() => setPanel(null)}
+        portraitFit={portraitFit} onPortraitFit={setPortraitFit}
+        onLock={() => { setLocked(true); setPanel(null); }} onClose={() => setPanel(null)}
       />
     </Sheet>
     <TagBlockMenu open={tagMenu} tags={meta.tags} initialSelected={tagSelection} onClose={() => setTagMenu(false)} />

@@ -53,6 +53,8 @@
 .playback-setting-rate-row { flex-wrap:wrap; }
 .playback-setting-rates { width:100%; margin-top:2px; }
 .playback-setting-size { flex:none; width:152px; }
+.playback-setting-action.ios-button { width:100%; color:var(--p-on); background:transparent; text-align:left; }
+.playback-setting-action>svg { flex:none; color:var(--p-mut); }
 @keyframes playback-settings-drawer-in { from { opacity:0; transform:translateX(32px); } to { opacity:1; transform:none; } }
 @media(max-width:360px) {
   .mobile-playback-dock { gap:6px; }

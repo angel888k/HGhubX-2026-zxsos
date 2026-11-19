@@ -315,7 +315,7 @@ export default function Feed({
     boxRef, videoRef, pinchRef, playbackClock, isDesktop, active, controlsLocked, showHoldGuide,
     rotated, fs, clean, setClean, idle, setIdle, arm, wake, swipeEp, kind, curId, epMap, setEpMap,
     episodesLength: episodes.length, effectiveLength: effectiveVideoIds.length, go,
-    duration, playUrl, playKey, lockControls, setPanel, setTagMenu, toast,
+    duration, playUrl, playKey, setPanel, setTagMenu, toast,
   });
   useEffect(() => { setBarScrubbing(barPct !== null || scrub !== null); }, [barPct, scrub]);
 

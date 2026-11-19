@@ -87,9 +87,11 @@ try {
   assert.equal(await probe("portraitFit"), "cover");
   assert.equal(await page.locator(".playback-settings-row").filter({ hasText: "上下划切集" }).count(), 0);
   assert.equal(await page.locator(".playback-settings-row").filter({ hasText: "静音" }).count(), 0);
-  assert.equal(await page.locator(".playback-setting-action").count(), 0);
-  await page.getByRole("button", { name: "关闭播放设置" }).click();
-  console.log("✓ quality, rate, and fit remain in settings; primary actions are no longer duplicated there");
+  assert.equal(await page.locator(".playback-setting-action").filter({ hasText: "屏幕锁定" }).count(), 1);
+  await page.locator(".playback-setting-action").filter({ hasText: "屏幕锁定" }).click();
+  assert.equal(await probe("locked"), true);
+  await page.locator(".playback-settings-sheet").waitFor({ state: "detached" });
+  console.log("✓ quality, rate, fit, and screen lock are in settings; primary playback actions stay in the dock");
 
   await page.setViewportSize({ width: 844, height: 390 });
   await page.waitForTimeout(150);
