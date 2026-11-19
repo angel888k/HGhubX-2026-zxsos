@@ -8,8 +8,9 @@ import { Sheet } from "../../shared/ui/ui";
 import { PlaybackProgress, PlaybackTime, PlayerControls, type PlaybackClock, type VideoHandle } from "../playback";
 import type { FeedMeta } from "./useFeedActions";
 import type { FeedPanel } from "./useFeedViewport";
+import { PlaybackSettingsPanel } from "./PlaybackSettingsPanel";
 import {
-  IBoltF, IClose, ICompress, ILockF, IPauseF, IPlayF, ISearch, IVertSwap, IVol, IVolMute,
+  IBoltF, IClose, ICompress, IPauseF, IPlayF, IVertSwap, IVol, IVolMute,
 } from "../../shared/ui/icons";
 
 const VideoDetailsPanel = lazy(() => import("./VideoDetailsPanel"));
@@ -53,6 +54,10 @@ type Props = {
   setVolume: (v: number) => void;
   swipeEp: boolean;
   setSwipeEp: (v: boolean) => void;
+  preferHevc: boolean;
+  setPreferHevc: (v: boolean) => void;
+  portraitFit: "contain" | "cover";
+  setPortraitFit: Dispatch<SetStateAction<"contain" | "cover">>;
   playKey: string;
   curId: number;
   curEp: number;
@@ -83,10 +88,8 @@ type Props = {
   exitFs: () => void;
   onFollow: () => Promise<void>;
   openTag: (tag: string) => void;
-  openTagMenu: () => void;
   closePanels: () => void;
   pushPage: (page: PageInput) => void;
-  onSearchTab: () => void;
   toast: (msg: string, icon?: Toast["icon"]) => void;
 };
 
@@ -94,13 +97,13 @@ export function FeedPlayerShellChrome({
   videoRef, speedLockTargetRef, barRef, playbackClock,
   isDesktop, active, fs, idle, rotated, vpLandscape, theater, setTheater, fullscreen, controlsLocked,
   paused, duration, rate, setRate, effRate, holdSpeed, holdSlow, speedLock, setSpeedLock, lockArmed,
-  muted, setMuted, volume, setVolume, swipeEp, setSwipeEp,
+  muted, setMuted, volume, setVolume, swipeEp, setSwipeEp, preferHevc, setPreferHevc, portraitFit, setPortraitFit,
   playKey, curId, curEp, index, effectiveLength, kind, meta, likeCount, collectCount, episodes, related,
   follows, followPending, post, articleHtml, panel, setPanel,
   scrub, barPct, onBarDown, onBarMove, onBarUp,
   pickEp, go, togglePip, lockControls, toggleFull, exitFs,
-  onFollow, openTag, openTagMenu, closePanels, pushPage, toast,
-}: Omit<Props, "clean" | "onSearchTab">) {
+  onFollow, openTag, closePanels, pushPage, toast,
+}: Omit<Props, "clean">) {
   const liveMeta = { ...meta, like: likeCount, collect: collectCount };
   const landscapeStage = rotated || vpLandscape;
   const edgePad = landscapeStage ? 24 : 16;
@@ -111,7 +114,7 @@ export function FeedPlayerShellChrome({
   const detailBody = (onClose?: () => void) => (
     <VideoDetailsPanel meta={liveMeta} videoId={curId} episodeCount={episodes.length}
       related={related} following={follows.includes(meta.authorId)} followPending={followPending}
-      onFollow={() => void onFollow()} onTag={openTag} onClose={onClose} onPreferences={openTagMenu}
+      onFollow={() => void onFollow()} onTag={openTag} onClose={onClose}
       onAuthor={() => { if (meta.authorId > 0) { closePanels(); pushPage({ kind: "user", id: meta.authorId, name: meta.author }); } }}
       onRelated={(video, visible) => { closePanels(); pushPage({ kind: "feed", videoIds: visible.map(item => item.id), index: visible.findIndex(item => item.id === video.id), title: "相关推荐" }); }} />
   );
@@ -223,7 +226,7 @@ export function FeedPlayerShellChrome({
             }}>
             <ICompress size={18} />
           </Button>
-          <div className="absolute inset-x-0 z-40 flex items-center gap-3 px-4"
+          <div className="mobile-fs-controls absolute inset-x-0 z-40 flex items-center px-4"
             style={{
               bottom: rotated ? 10 : "calc(var(--sab, 0px) + 10px)",
               paddingLeft: fsSafeLeft,
@@ -233,7 +236,7 @@ export function FeedPlayerShellChrome({
               className="hg-chip shrink-0 w-9 h-9 rounded-full flex items-center justify-center pressable">
               {paused ? <IPlayF size={18} /> : <IPauseF size={17} />}
             </Button>
-            <PlaybackTime clock={playbackClock} className="shrink-0 text-[12px] font-semibold hg-ink-2 tabular-nums" />
+            <PlaybackTime clock={playbackClock} className="mobile-fs-clock shrink-0 text-[12px] font-semibold hg-ink-2 tabular-nums" />
             <Button
               aria-label={speedLock ? "解除倍速锁定" : `切换倍速，当前 ${effRate} 倍`}
               onClick={() => {
@@ -252,7 +255,16 @@ export function FeedPlayerShellChrome({
                 <IVertSwap size={12} />下集
               </Button>
             )}
-            <span className="shrink-0 text-[12px] hg-ink-4 tabular-nums">{fmtTime(duration)}</span>
+            <Button onClick={() => setMuted(value => !value)} aria-label={muted ? "取消静音" : "静音"} aria-pressed={muted}
+              className="hg-chip shrink-0 w-8 h-8 rounded-full flex items-center justify-center pressable">
+              {muted ? <IVolMute size={16} /> : <IVol size={16} />}
+            </Button>
+            {episodes.length > 1 && <Button onClick={() => { const next = !swipeEp; setSwipeEp(next); toast(next ? "上下划切集已开启" : "上下划切集已关闭", "info"); }}
+              aria-label={swipeEp ? "关闭上下划切集" : "开启上下划切集"} aria-pressed={swipeEp}
+              className={`hg-chip shrink-0 w-8 h-8 rounded-full flex items-center justify-center pressable ${swipeEp ? "is-on" : ""}`}>
+              <IVertSwap size={16} />
+            </Button>}
+            <span className="mobile-fs-duration shrink-0 text-[12px] hg-ink-4 tabular-nums">{fmtTime(duration)}</span>
           </div>
         </>
       )}
@@ -272,6 +284,15 @@ export function FeedPlayerShellChrome({
         </div>
       ) : (
         <>
+          <Sheet open={active && panel === "more"} label="播放设置" z="playback-settings-overlay" onClose={() => setPanel(null)}>
+            <PlaybackSettingsPanel
+              rate={rate} onRate={(value) => { setRate(value); videoRef.current?.rate(value); }}
+              preferHevc={preferHevc} onPreferHevc={setPreferHevc}
+              portraitFit={portraitFit} onPortraitFit={setPortraitFit}
+              onLock={() => { setPanel(null); lockControls(); }}
+              onClose={() => setPanel(null)} />
+          </Sheet>
+
           {/* 评论：移动端底部弹层（右侧操作栏「评论」入口） */}
           <Sheet open={active && panel === "comments"} onClose={() => setPanel(null)}>
             <div className="feed-comments-sheet">
@@ -325,7 +346,7 @@ export function FeedPlayerShellChrome({
 }
 
 export function FeedMobileTopTools({
-  isDesktop, controlsLocked, active, fs, idle, rotated, clean, muted, setMuted, lockControls, onSearchTab,
+  isDesktop, controlsLocked, active, fs, idle, rotated, clean, currentQuality,
 }: {
   isDesktop: boolean;
   controlsLocked: boolean;
@@ -334,27 +355,16 @@ export function FeedMobileTopTools({
   idle: boolean;
   rotated: boolean;
   clean: boolean;
-  muted: boolean;
-  setMuted: Dispatch<SetStateAction<boolean>>;
-  lockControls: () => void;
-  onSearchTab: () => void;
+  currentQuality: "HD" | "SD" | null;
 }) {
-  if (isDesktop || controlsLocked || !active || (fs && idle)) return null;
+  if (isDesktop || controlsLocked || !active || (fs && idle) || (!fs && clean)) return null;
   return (
-    <div className="absolute z-40 flex items-center gap-2"
+    <div className="feed-mobile-top-tools absolute z-40 flex items-center gap-2"
       style={{
         top: rotated ? 12 : "calc(var(--sat, 0px) + 6px)",
-        // 触屏下按钮实际 44px：退出键占 12–56，锁定组从 68 起，留 12px 间距
         right: fs ? (rotated ? "calc(var(--sab, 0px) + 68px)" : "calc(var(--sar, 0px) + 68px)") : "calc(var(--sar, 0px) + 12px)",
       }}>
-      {!fs && !clean && <Button onClick={() => setMuted(m => !m)} aria-label={muted ? "取消静音" : "静音"}
-        className="hg-chip w-9 h-9 rounded-full flex items-center justify-center pressable elev-1">
-        {muted ? <IVolMute size={17} /> : <IVol size={17} />}
-      </Button>}
-      <Button onClick={lockControls} aria-label="锁定播放控制" title="锁定播放控制" aria-pressed={false}
-        className={`hg-chip ${fs ? "w-11 h-11" : "w-9 h-9"} rounded-full flex items-center justify-center pressable elev-1`}><ILockF size={17} /></Button>
-      {!fs && !clean && <Button onClick={onSearchTab} aria-label="搜索"
-        className="hg-chip w-9 h-9 rounded-full flex items-center justify-center pressable elev-1"><ISearch size={18} /></Button>}
+      {currentQuality && <span className="feed-current-quality" aria-label={`当前清晰度：${currentQuality === "HD" ? "高清" : "标清"}`}>{currentQuality}</span>}
     </div>
   );
 }

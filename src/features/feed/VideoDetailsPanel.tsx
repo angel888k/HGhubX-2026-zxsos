@@ -15,10 +15,10 @@ type VideoMeta = {
 
 /** One details body for the mobile sheet and desktop dock. */
 export default function VideoDetailsPanel({ meta, videoId, episodeCount, related, following, followPending,
-  onFollow, onTag, onAuthor, onRelated, onClose, onPreferences }: {
+  onFollow, onTag, onAuthor, onRelated, onClose }: {
   meta: VideoMeta; videoId: number; episodeCount: number; related: VideoCard[];
   following: boolean; followPending: boolean; onFollow: () => void; onTag: (tag: string) => void;
-  onAuthor: () => void; onRelated: (video: VideoCard, visible: VideoCard[]) => void; onClose?: () => void; onPreferences: () => void;
+  onAuthor: () => void; onRelated: (video: VideoCard, visible: VideoCard[]) => void; onClose?: () => void;
 }) {
   return <div className="video-details-panel" data-video-details>
     {onClose && <div className="video-details-heading">
@@ -39,9 +39,7 @@ export default function VideoDetailsPanel({ meta, videoId, episodeCount, related
       </div>
 
       <section className="video-details-section" aria-label="标签导航">
-        <div className="video-details-section-heading"><h3>标签 · 点击查看同类</h3>
-          <Button className="video-detail-preferences" onClick={onPreferences}>调整内容偏好</Button>
-        </div>
+        <div className="video-details-section-heading"><h3>标签 · 点击查看同类 · 长按屏蔽</h3></div>
         <ContentTags tags={meta.tags} onOpen={onTag} />
       </section>
 
