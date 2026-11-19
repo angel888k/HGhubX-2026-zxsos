@@ -91,6 +91,8 @@
   固定为 none，避免原生 pan-y 把视觉横滑取消掉。
 - 媒体错误：hls fatal 显示 `type/details/status`，原生错误走
   `mediaErrorMessage`；手动重试走同一个 `useProxyPlaybackRecovery` 路径。
+- 吃瓜详情内嵌 `Player` 的媒体 `waiting` 事件延迟 300ms 显示加载动画；恢复播放时立即取消
+  等待计时与提示。用户主动 seek 或手动重试则立即显示加载动画，避免短暂缓冲造成反复闪现。
 
 ## 约束与失败行为
 
@@ -113,7 +115,7 @@
 
 ```sh
 pnpm build
-pnpm test:playback --scenarios seek,legacy,lifecycle,gesture,proxy,portrait-fit,ios-native,recovery,review,tv
+pnpm test:playback --scenarios seek,legacy,lifecycle,gesture,proxy,portrait-fit,ios-native,recovery,review,tv,post-flicker
 node scripts/test-ios-native-media.mjs
 cargo test --manifest-path src-tauri/Cargo.toml --lib
 ```

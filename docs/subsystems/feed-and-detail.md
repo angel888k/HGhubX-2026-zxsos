@@ -129,7 +129,7 @@ cargo test --manifest-path src-tauri/Cargo.toml --lib
 ```
 
 `test:smoke` 当前包含 `api-loading`、`storage-migration`、`line-selection`、
-`diagnostic-copy`。浏览器 fixture 使用 mock Tauri IPC 且阻断外部请求，
+`diagnostic-copy`、`ui-feedback`。浏览器 fixture 使用 mock Tauri IPC 且阻断外部请求，
 不能证明真实上游的正文结构或账号接口；真实接口变化需要另加网络隔离的 fixture 或手动验证。
 `test:post-flicker` 是吃瓜详情线路/代理事件的回归（issue #165）：浏览器 fixture，
 mock IPC，本地 ffmpeg HLS 分片，不访问上游；需要 ffmpeg，归入播放诊断
