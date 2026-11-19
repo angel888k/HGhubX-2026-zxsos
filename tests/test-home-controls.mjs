@@ -32,6 +32,17 @@ try {
   await page.locator(".mobile-playback-dock").waitFor();
   const probe = name => page.evaluate(key => window.homeControlsProbe[key](), name);
 
+  const swipe = async (locator, startX, dx, dy = 0) => {
+    const box = await locator.boundingBox();
+    assert.ok(box);
+    const y = box.y + Math.min(40, box.height / 3);
+    await page.mouse.move(box.x + startX, y);
+    await page.mouse.down();
+    await page.mouse.move(box.x + startX + dx, y + dy, { steps: 8 });
+    await page.mouse.up();
+    await page.waitForTimeout(150);
+  };
+
   const railOrder = await page.locator(".mobile-video-action-rail>button").evaluateAll(buttons => buttons.map(button => button.getAttribute("aria-label")));
   assert.deepEqual(railOrder, ["点赞", "收藏", "评论 89 条", "更多播放设置"]);
   assert.equal(await page.locator(".mobile-playback-episodes").innerText(), "选集 · 全109集");
@@ -48,6 +59,18 @@ try {
   await page.screenshot({ path: path.join(output, "home-portrait.png") });
   console.log("✓ portrait rail, real episode total, HD badge, bottom quick controls, and one panel entry");
 
+  await page.evaluate(() => window.homeControlsProbe.setClean(true));
+  const cleanLock = page.locator(".mobile-clean-lock");
+  await cleanLock.waitFor();
+  const cleanLockBox = await cleanLock.boundingBox();
+  assert.ok(cleanLockBox && cleanLockBox.x > 390 / 2);
+  assert.equal(await page.locator(".feed-current-quality").count(), 0);
+  await page.screenshot({ path: path.join(output, "home-clean.png") });
+  await page.getByRole("button", { name: "屏幕锁定", exact: true }).click();
+  assert.equal(await probe("locked"), true);
+  await page.evaluate(() => { window.homeControlsProbe.setLocked(false); window.homeControlsProbe.setClean(false); });
+  console.log("✓ clean-screen playback shows a right-center screen-lock control");
+
   await page.getByRole("button", { name: "取消静音" }).click();
   assert.equal(await probe("muted"), false);
   await page.getByRole("button", { name: "关闭上下划切集" }).click();
@@ -56,6 +79,30 @@ try {
 
   await page.locator(".mobile-playback-episodes").click();
   assert.equal(await probe("panel"), "episodes");
+  const panelBody = page.locator(".video-details-sheet-body");
+  await panelBody.waitFor();
+  await swipe(panelBody, 24, 110);
+  assert.equal(await probe("panel"), "detail");
+  assert.equal(await page.getByTestId("detail-content").count(), 1);
+
+  const related = page.getByTestId("related-scroll");
+  await related.scrollIntoViewIfNeeded();
+  const relatedBox = await related.boundingBox();
+  assert.ok(relatedBox);
+  await page.mouse.move(relatedBox.x + 20, relatedBox.y + relatedBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(relatedBox.x + 160, relatedBox.y + relatedBox.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await page.waitForTimeout(150);
+  assert.equal(await probe("panel"), "detail");
+  console.log("✓ related-content carousel keeps its horizontal swipe without changing tabs");
+
+  await swipe(panelBody, 130, -110);
+  assert.equal(await probe("panel"), "episodes");
+  await swipe(panelBody, 24, 0, 160);
+  assert.equal(await probe("panel"), null);
+  console.log("✓ panel tabs switch with horizontal swipes and a top downward swipe closes the sheet");
+
   await page.getByRole("button", { name: "全屏", exact: true }).click();
   assert.equal(await probe("fullscreen"), false);
   console.log("✓ episode dock and fullscreen actions use the existing callbacks");
@@ -87,11 +134,9 @@ try {
   assert.equal(await probe("portraitFit"), "cover");
   assert.equal(await page.locator(".playback-settings-row").filter({ hasText: "上下划切集" }).count(), 0);
   assert.equal(await page.locator(".playback-settings-row").filter({ hasText: "静音" }).count(), 0);
-  assert.equal(await page.locator(".playback-setting-action").filter({ hasText: "屏幕锁定" }).count(), 1);
-  await page.locator(".playback-setting-action").filter({ hasText: "屏幕锁定" }).click();
-  assert.equal(await probe("locked"), true);
-  await page.locator(".playback-settings-sheet").waitFor({ state: "detached" });
-  console.log("✓ quality, rate, fit, and screen lock are in settings; primary playback actions stay in the dock");
+  assert.equal(await page.locator(".playback-setting-action").count(), 0);
+  await page.getByRole("button", { name: "关闭播放设置" }).click();
+  console.log("✓ quality, rate, and fit remain in settings; primary playback actions stay in the dock");
 
   await page.setViewportSize({ width: 844, height: 390 });
   await page.waitForTimeout(150);

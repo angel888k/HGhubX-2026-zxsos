@@ -7,7 +7,7 @@ import type { Toast } from "../../shared/model/store";
 import { PlaybackProgress, type PlaybackClock } from "../playback";
 import {
   IBack, IChevR, IChevronDown, IChevronUp, ICommentF, IExpand, IFileText,
-  IHeart, IHeartF, IList, IMore, IPlayF, IStar, IStarF, IVertSwap, IVol, IVolMute,
+  IHeart, IHeartF, IList, ILockF, IMore, IPlayF, IStar, IStarF, IVertSwap, IVol, IVolMute,
 } from "../../shared/ui/icons";
 import { CurrentVideoTags } from "./CurrentVideoTags";
 import type { FeedMeta } from "./useFeedActions";
@@ -66,6 +66,7 @@ type Props = {
   swipeEnabled: boolean;
   swipeEp: boolean;
   onToggleSwipe: () => void;
+  onLock: () => void;
   onBarDown: (e: ReactPointerEvent<HTMLDivElement>) => void;
   onBarMove: (e: ReactPointerEvent<HTMLDivElement>) => void;
   onBarUp: (e: ReactPointerEvent<HTMLDivElement>, cancelled?: boolean) => void;
@@ -80,7 +81,7 @@ export default function FeedItemChrome({
   liked, collected, likePending, collectPending, heartBurst, likeCount, collectCount,
   paused, waiting, err, scrub, barRef, barPct, playbackClock,
   onBack, enterFs, stepDir, canStep, onLike, onFav, setPanel, openTag, openTagMenu,
-  muted, onToggleMuted, swipeEnabled, swipeEp, onToggleSwipe,
+  muted, onToggleMuted, swipeEnabled, swipeEp, onToggleSwipe, onLock,
   onBarDown, onBarMove, onBarUp, onRetryStream, toast,
 }: Props) {
   const episodes = meta.episodes;
@@ -120,6 +121,11 @@ export default function FeedItemChrome({
           style={{ top: "calc(var(--sat, 0px) + 52px)", left: 12, color: "rgba(255,255,255,.94)" }}>
           {index + 1} / {effectiveLength}
         </span>
+      )}
+      {!isDesktop && kind === "video" && clean && (
+        <Button aria-label="屏幕锁定" onClick={onLock} className="mobile-clean-lock">
+          <ILockF size={19} />
+        </Button>
       )}
 
       {/* 竖屏下的快捷操作（#19）：

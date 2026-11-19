@@ -674,6 +674,7 @@ export default function Feed({
                   onLike={onLike} onFav={onFav} setPanel={setPanel} openTag={openTag} openTagMenu={openTagMenu}
                   muted={muted} onToggleMuted={() => setMuted(value => !value)}
                   swipeEnabled={kind === "video" && episodes.length > 1} swipeEp={swipeEp} onToggleSwipe={toggleSwipeEp}
+                  onLock={lockControls}
                   onBarDown={onBarDown} onBarMove={onBarMove} onBarUp={onBarUp}
                   onRetryStream={() => {
                     setErr(""); setWaiting(true);
