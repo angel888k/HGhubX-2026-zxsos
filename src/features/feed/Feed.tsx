@@ -157,6 +157,12 @@ export default function Feed({
   const openPreferences = () => { closePanels(); store.push({ kind: "settings", section: "内容偏好" }); };
   const openTagMenu = (selected: string[] = []) => { setTagSelection(selected); setPanel(null); setTagMenu(true); };
   const openTag = (tag: string) => { closePanels(); store.push({ kind: "tag", tag, name: tag }); };
+  const lockControls = () => { setPanel(null); setControlsLocked(true); };
+  const toggleSwipeEp = () => {
+    const next = !swipeEp;
+    setSwipeEp(next);
+    toast(next ? "上下划切集已开启" : "上下划切集已关闭", "info");
+  };
 
   useEffect(() => { setTagMenu(false); setTagSelection([]); }, [curId, store.lineEpoch, accountScope]);
   useEffect(() => {
@@ -309,7 +315,7 @@ export default function Feed({
     boxRef, videoRef, pinchRef, playbackClock, isDesktop, active, controlsLocked, showHoldGuide,
     rotated, fs, clean, setClean, idle, setIdle, arm, wake, swipeEp, kind, curId, epMap, setEpMap,
     episodesLength: episodes.length, effectiveLength: effectiveVideoIds.length, go,
-    duration, playUrl, playKey, openTagMenu, setPanel, setTagMenu, toast,
+    duration, playUrl, playKey, lockControls, setPanel, setTagMenu, toast,
   });
   useEffect(() => { setBarScrubbing(barPct !== null || scrub !== null); }, [barPct, scrub]);
 
@@ -535,7 +541,6 @@ export default function Feed({
     return registerOverlayBack(() => { setPanel(null); return true; });
   }, [active, panel]);
 
-  const lockControls = () => { setPanel(null); setControlsLocked(true); };
   const pickEp = (ep: number) => {
     setEpMap((m) => ({ ...m, [curId]: ep }));
     setPanel(null);
@@ -667,6 +672,8 @@ export default function Feed({
                   paused={paused} waiting={waiting} err={err} scrub={scrub} barRef={barRef} barPct={barPct}
                   playbackClock={playbackClock} onBack={onBack} enterFs={enterFs} stepDir={stepDir} canStep={canStep}
                   onLike={onLike} onFav={onFav} setPanel={setPanel} openTag={openTag} openTagMenu={openTagMenu}
+                  muted={muted} onToggleMuted={() => setMuted(value => !value)}
+                  swipeEnabled={kind === "video" && episodes.length > 1} swipeEp={swipeEp} onToggleSwipe={toggleSwipeEp}
                   onBarDown={onBarDown} onBarMove={onBarMove} onBarUp={onBarUp}
                   onRetryStream={() => {
                     setErr(""); setWaiting(true);
@@ -694,14 +701,13 @@ export default function Feed({
           post={post} articleHtml={articleHtml} panel={panel} setPanel={setPanel}
           scrub={scrub} barPct={barPct} onBarDown={onBarDown} onBarMove={onBarMove} onBarUp={onBarUp}
           pickEp={pickEp} go={go} togglePip={togglePip} lockControls={lockControls} toggleFull={toggleFull} exitFs={exitFs}
-          onFollow={onFollow} openTag={openTag} openTagMenu={openTagMenu} closePanels={closePanels} pushPage={store.push} toast={toast}
+          onFollow={onFollow} openTag={openTag} closePanels={closePanels} pushPage={store.push} toast={toast}
         />
       </div>
 
       <FeedMobileTopTools
         isDesktop={isDesktop} controlsLocked={controlsLocked} active={active} fs={fs} idle={idle}
         rotated={rotated} clean={clean} currentQuality={playUrl ? (preferHevc && hevcUrl && playUrl === hevcUrl ? "HD" : "SD") : null}
-        lockControls={lockControls}
       />
       <TagBlockMenu open={active && tagMenu} tags={meta.tags} initialSelected={tagSelection} onClose={() => setTagMenu(false)} onSettings={openPreferences} />
       {!isDesktop && <MobileHoldGuide open={showHoldGuide} onClose={holdGuide.dismiss} target={holdTargetRef} bottomInset={bottomInset} />}

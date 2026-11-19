@@ -82,6 +82,8 @@
   `--fill` 表示已播百分比）；拖动加粗态在 `src/styles/post-player.css` 按
   `.post-player[data-scrubbing=true] input[type="range"].ios-range` 覆盖。旧 `hg-range`
   类已删除，不得再新增；桌面播放器的 `desktop-seek-*` 是另一套独立结构，不共用该类。
+- 移动端长按中心锁定控件，和移入顶部倍速胶囊锁定倍速是不同操作；
+  静音和上下划切集开关在全屏时仍可从底部播放条一键操作。
 - 控件闲置隐藏（`src/features/feed/fsIdle.ts`）：桌面 2.8s（键盘聚焦控件时不隐藏）；
   移动沉浸全屏按设置 `fsIdleSecs`（`hghubx_app_v1` 内，0/3/5/10 秒，默认 3，0=不自动隐藏），
   单击画面切换显隐、双击仍是暂停/播放；暂停时不隐藏。桌面与内嵌全屏统一经

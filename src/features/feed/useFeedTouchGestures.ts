@@ -32,7 +32,7 @@ type Args = {
   duration: number;
   playUrl: string;
   playKey: string;
-  openTagMenu: () => void;
+  lockControls: () => void;
   setPanel: Dispatch<SetStateAction<FeedPanel>>;
   setTagMenu: Dispatch<SetStateAction<boolean>>;
   toast: (msg: string, icon?: Toast["icon"], tag?: string) => void;
@@ -41,7 +41,7 @@ type Args = {
 export function useFeedTouchGestures({
   boxRef, videoRef, pinchRef, playbackClock, isDesktop, active, controlsLocked, showHoldGuide,
   rotated, fs, clean, setClean, idle, setIdle, arm, wake, swipeEp, kind, curId, epMap, setEpMap,
-  episodesLength, effectiveLength, go, duration, playUrl, playKey, openTagMenu, setPanel, setTagMenu, toast,
+  episodesLength, effectiveLength, go, duration, playUrl, playKey, lockControls, setPanel, setTagMenu, toast,
 }: Args) {
   const [holdSpeed, setHoldSpeed] = useState(0);
   const [holdSlow, setHoldSlow] = useState(false);
@@ -134,7 +134,7 @@ export function useFeedTouchGestures({
         cur.mode = "hold";
         if (cur.zone === "menu") {
           holdRef.current = false;
-          openTagMenu();
+          lockControls();
         } else {
           holdRef.current = true;
           if (cur.zone === "slow") setHoldSlow(true);
@@ -167,7 +167,7 @@ export function useFeedTouchGestures({
     if (!g || isDesktop) return;
     const dx = point.x - g.x, dy = point.y - g.y;
 
-    /* 长按中：加速区左右滑换挡；移入顶部胶囊才 armed，减速/不感兴趣区不锁 */
+    /* 长按中：加速区左右滑换挡；移入顶部胶囊才 armed，减速/锁定区不锁 */
     if (g.mode === "hold") {
       if (g.zone !== "fast") return;
       const step = g.speed && shiftHoldSpeed(g.speed, point.x); if (step) setHoldSpeed(step);

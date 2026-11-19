@@ -7,7 +7,7 @@ import type { Toast } from "../../shared/model/store";
 import { PlaybackProgress, type PlaybackClock } from "../playback";
 import {
   IBack, IChevR, IChevronDown, IChevronUp, ICommentF, IExpand, IFileText,
-  IHeart, IHeartF, IList, IMore, IPlayF, IStar, IStarF,
+  IHeart, IHeartF, IList, IMore, IPlayF, IStar, IStarF, IVertSwap, IVol, IVolMute,
 } from "../../shared/ui/icons";
 import { CurrentVideoTags } from "./CurrentVideoTags";
 import type { FeedMeta } from "./useFeedActions";
@@ -61,6 +61,11 @@ type Props = {
   setPanel: Dispatch<SetStateAction<FeedPanel>>;
   openTag: (tag: string) => void;
   openTagMenu: (selected?: string[]) => void;
+  muted: boolean;
+  onToggleMuted: () => void;
+  swipeEnabled: boolean;
+  swipeEp: boolean;
+  onToggleSwipe: () => void;
   onBarDown: (e: ReactPointerEvent<HTMLDivElement>) => void;
   onBarMove: (e: ReactPointerEvent<HTMLDivElement>) => void;
   onBarUp: (e: ReactPointerEvent<HTMLDivElement>, cancelled?: boolean) => void;
@@ -75,6 +80,7 @@ export default function FeedItemChrome({
   liked, collected, likePending, collectPending, heartBurst, likeCount, collectCount,
   paused, waiting, err, scrub, barRef, barPct, playbackClock,
   onBack, enterFs, stepDir, canStep, onLike, onFav, setPanel, openTag, openTagMenu,
+  muted, onToggleMuted, swipeEnabled, swipeEp, onToggleSwipe,
   onBarDown, onBarMove, onBarUp, onRetryStream, toast,
 }: Props) {
   const episodes = meta.episodes;
@@ -274,19 +280,11 @@ export default function FeedItemChrome({
                 {!!meta.author && <div className="mobile-video-author">@{meta.author}</div>}
                 <p className="text-[15px] font-semibold leading-snug ios-overlay-ink-2 ios-overlay-shadow-strong clamp-2">{meta.title}</p>
                 <CurrentVideoTags tags={meta.tags} onOpen={openTag} onBlock={tag => openTagMenu([tag])} />
+                {meta.tags.length > 0 && <div className="current-video-tags-hint">点按查看同类 · 长按屏蔽</div>}
               </div>
             </div>
           )}
           <div className="relative pt-1.5 pb-2.5">
-            {!clean && (
-              <div className={`mobile-video-meta-copy flex flex-wrap items-center gap-2 transition-opacity duration-150 ${scrubbing ? "opacity-35" : ""}`}>
-                <Button aria-label="视频详情" onClick={() => setPanel("detail")}
-                  className="min-h-11 flex items-center gap-0.5 text-[12px] font-medium ios-overlay-ink-3 ios-overlay-shadow-strong pressable pointer-events-auto">
-                  {kind === "post" ? "图文详情" : `详情 · 第 ${curEp} 集`}<IChevR size={11} />
-                </Button>
-                {meta.tags.length > 0 && <span className="current-video-tags-hint">长按标签可屏蔽</span>}
-              </div>
-            )}
             {isActive && <div ref={barRef} data-seek-bar data-scrubbing={scrubbing || undefined}
               className="-mt-0.5 -mb-2.5 relative pointer-events-auto"
               style={{
@@ -328,8 +326,18 @@ export default function FeedItemChrome({
               )}
             </div>}
             {!clean && <div className="mobile-playback-dock">
-              {kind === "video" && <Button aria-label={episodes.length ? `选集，共 ${episodes.length} 集` : "选集"} onClick={() => setPanel("episodes")} className="mobile-playback-episodes">
+              {kind === "video" ? <Button aria-label={episodes.length ? `选集，共 ${episodes.length} 集` : "选集"} onClick={() => setPanel("episodes")} className="mobile-playback-episodes">
                 <IList size={18} /><span>选集{episodes.length > 0 ? ` · 全${episodes.length}集` : ""}</span><IChevronUp size={16} />
+              </Button> : <Button aria-label="图文详情" onClick={() => setPanel("detail")} className="mobile-playback-episodes">
+                <IFileText size={18} /><span>图文详情</span><IChevronUp size={16} />
+              </Button>}
+              <Button onClick={onToggleMuted} aria-label={muted ? "取消静音" : "静音"} aria-pressed={muted}
+                className="mobile-playback-quick">
+                {muted ? <IVolMute size={18} /> : <IVol size={18} />}
+              </Button>
+              {swipeEnabled && <Button onClick={onToggleSwipe} aria-label={swipeEp ? "关闭上下划切集" : "开启上下划切集"} aria-pressed={swipeEp}
+                className={`mobile-playback-quick ${swipeEp ? "is-on" : ""}`}>
+                <IVertSwap size={18} />
               </Button>}
               <Button aria-label="全屏" onClick={() => enterFs(landscapeVideo)} className="mobile-playback-fullscreen"><IExpand size={19} /></Button>
             </div>}
