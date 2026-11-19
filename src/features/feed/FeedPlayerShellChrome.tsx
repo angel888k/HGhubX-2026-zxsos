@@ -226,7 +226,7 @@ export function FeedPlayerShellChrome({
             }}>
             <ICompress size={18} />
           </Button>
-          <div className="mobile-fs-controls absolute inset-x-0 z-40 flex items-center gap-3 px-4"
+          <div className="mobile-fs-controls absolute inset-x-0 z-40 flex items-center px-4"
             style={{
               bottom: rotated ? 10 : "calc(var(--sab, 0px) + 10px)",
               paddingLeft: fsSafeLeft,
