@@ -226,7 +226,7 @@ export function FeedPlayerShellChrome({
             }}>
             <ICompress size={18} />
           </Button>
-          <div className="absolute inset-x-0 z-40 flex items-center gap-3 px-4"
+          <div className="mobile-fs-controls absolute inset-x-0 z-40 flex items-center gap-3 px-4"
             style={{
               bottom: rotated ? 10 : "calc(var(--sab, 0px) + 10px)",
               paddingLeft: fsSafeLeft,
@@ -236,7 +236,7 @@ export function FeedPlayerShellChrome({
               className="hg-chip shrink-0 w-9 h-9 rounded-full flex items-center justify-center pressable">
               {paused ? <IPlayF size={18} /> : <IPauseF size={17} />}
             </Button>
-            <PlaybackTime clock={playbackClock} className="shrink-0 text-[12px] font-semibold hg-ink-2 tabular-nums" />
+            <PlaybackTime clock={playbackClock} className="mobile-fs-clock shrink-0 text-[12px] font-semibold hg-ink-2 tabular-nums" />
             <Button
               aria-label={speedLock ? "解除倍速锁定" : `切换倍速，当前 ${effRate} 倍`}
               onClick={() => {
@@ -255,7 +255,16 @@ export function FeedPlayerShellChrome({
                 <IVertSwap size={12} />下集
               </Button>
             )}
-            <span className="shrink-0 text-[12px] hg-ink-4 tabular-nums">{fmtTime(duration)}</span>
+            <Button onClick={() => setMuted(value => !value)} aria-label={muted ? "取消静音" : "静音"} aria-pressed={muted}
+              className="hg-chip shrink-0 w-8 h-8 rounded-full flex items-center justify-center pressable">
+              {muted ? <IVolMute size={16} /> : <IVol size={16} />}
+            </Button>
+            {episodes.length > 1 && <Button onClick={() => { const next = !swipeEp; setSwipeEp(next); toast(next ? "上下划切集已开启" : "上下划切集已关闭", "info"); }}
+              aria-label={swipeEp ? "关闭上下划切集" : "开启上下划切集"} aria-pressed={swipeEp}
+              className={`hg-chip shrink-0 w-8 h-8 rounded-full flex items-center justify-center pressable ${swipeEp ? "is-on" : ""}`}>
+              <IVertSwap size={16} />
+            </Button>}
+            <span className="mobile-fs-duration shrink-0 text-[12px] hg-ink-4 tabular-nums">{fmtTime(duration)}</span>
           </div>
         </>
       )}
@@ -337,7 +346,6 @@ export function FeedPlayerShellChrome({
 
 export function FeedMobileTopTools({
   isDesktop, controlsLocked, active, fs, idle, rotated, clean, currentQuality,
-  muted, onToggleMuted, swipeEnabled, swipeEp, onToggleSwipe,
 }: {
   isDesktop: boolean;
   controlsLocked: boolean;
@@ -347,31 +355,15 @@ export function FeedMobileTopTools({
   rotated: boolean;
   clean: boolean;
   currentQuality: "HD" | "SD" | null;
-  muted: boolean;
-  onToggleMuted: () => void;
-  swipeEnabled: boolean;
-  swipeEp: boolean;
-  onToggleSwipe: () => void;
 }) {
   if (isDesktop || controlsLocked || !active || (fs && idle) || (!fs && clean)) return null;
-  const chip = fs ? "w-11 h-11" : "w-9 h-9";
   return (
     <div className="feed-mobile-top-tools absolute z-40 flex items-center gap-2"
       style={{
         top: rotated ? 12 : "calc(var(--sat, 0px) + 6px)",
         right: fs ? (rotated ? "calc(var(--sab, 0px) + 68px)" : "calc(var(--sar, 0px) + 68px)") : "calc(var(--sar, 0px) + 12px)",
       }}>
-      {!clean && <>
-        <Button onClick={onToggleMuted} aria-label={muted ? "取消静音" : "静音"} aria-pressed={muted}
-          className={`hg-chip ${chip} rounded-full flex items-center justify-center pressable elev-1`}>
-          {muted ? <IVolMute size={17} /> : <IVol size={17} />}
-        </Button>
-        {swipeEnabled && <Button onClick={onToggleSwipe} aria-label={swipeEp ? "关闭上下划切集" : "开启上下划切集"} aria-pressed={swipeEp}
-          className={`hg-chip ${chip} rounded-full flex items-center justify-center pressable elev-1 ${swipeEp ? "is-on" : ""}`}>
-          <IVertSwap size={17} />
-        </Button>}
-        {currentQuality && <span className="feed-current-quality" aria-label={`当前清晰度：${currentQuality === "HD" ? "高清" : "标清"}`}>{currentQuality}</span>}
-      </>}
+      {currentQuality && <span className="feed-current-quality" aria-label={`当前清晰度：${currentQuality === "HD" ? "高清" : "标清"}`}>{currentQuality}</span>}
     </div>
   );
 }

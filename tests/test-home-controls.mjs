@@ -36,19 +36,21 @@ try {
   assert.deepEqual(railOrder, ["点赞", "收藏", "评论 89 条", "更多播放设置"]);
   assert.equal(await page.locator(".mobile-playback-episodes").innerText(), "选集 · 全109集");
   assert.equal(await page.locator(".feed-current-quality").innerText(), "HD");
+  assert.equal(await page.locator(".feed-mobile-top-tools button").count(), 0);
+  assert.deepEqual(await page.locator(".mobile-playback-quick").evaluateAll(buttons => buttons.map(button => button.getAttribute("aria-label"))), ["取消静音", "关闭上下划切集"]);
   assert.equal(await page.getByRole("button", { name: "搜索", exact: true }).count(), 0);
   assert.equal(await page.getByRole("button", { name: "视频详情", exact: true }).count(), 0);
   const portraitMore = await page.getByRole("button", { name: "更多播放设置" }).boundingBox();
   const portraitDock = await page.locator(".mobile-playback-dock").boundingBox();
   assert.ok(portraitMore && portraitDock && portraitMore.y + portraitMore.height < portraitDock.y);
   await page.screenshot({ path: path.join(output, "home-portrait.png") });
-  console.log("✓ portrait rail, real episode total, HD badge, no top search, and one panel entry");
+  console.log("✓ portrait rail, real episode total, HD badge, bottom quick controls, and one panel entry");
 
   await page.getByRole("button", { name: "取消静音" }).click();
   assert.equal(await probe("muted"), false);
   await page.getByRole("button", { name: "关闭上下划切集" }).click();
   assert.equal(await probe("swipeEp"), false);
-  console.log("✓ mute and episode-swipe toggles are primary one-tap controls");
+  console.log("✓ mute and episode-swipe are one-tap controls in the bottom thumb zone");
 
   await page.locator(".mobile-playback-episodes").click();
   assert.equal(await probe("panel"), "episodes");

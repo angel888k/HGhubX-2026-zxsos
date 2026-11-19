@@ -158,6 +158,11 @@ export default function Feed({
   const openTagMenu = (selected: string[] = []) => { setTagSelection(selected); setPanel(null); setTagMenu(true); };
   const openTag = (tag: string) => { closePanels(); store.push({ kind: "tag", tag, name: tag }); };
   const lockControls = () => { setPanel(null); setControlsLocked(true); };
+  const toggleSwipeEp = () => {
+    const next = !swipeEp;
+    setSwipeEp(next);
+    toast(next ? "上下划切集已开启" : "上下划切集已关闭", "info");
+  };
 
   useEffect(() => { setTagMenu(false); setTagSelection([]); }, [curId, store.lineEpoch, accountScope]);
   useEffect(() => {
@@ -667,6 +672,8 @@ export default function Feed({
                   paused={paused} waiting={waiting} err={err} scrub={scrub} barRef={barRef} barPct={barPct}
                   playbackClock={playbackClock} onBack={onBack} enterFs={enterFs} stepDir={stepDir} canStep={canStep}
                   onLike={onLike} onFav={onFav} setPanel={setPanel} openTag={openTag} openTagMenu={openTagMenu}
+                  muted={muted} onToggleMuted={() => setMuted(value => !value)}
+                  swipeEnabled={kind === "video" && episodes.length > 1} swipeEp={swipeEp} onToggleSwipe={toggleSwipeEp}
                   onBarDown={onBarDown} onBarMove={onBarMove} onBarUp={onBarUp}
                   onRetryStream={() => {
                     setErr(""); setWaiting(true);
@@ -701,13 +708,6 @@ export default function Feed({
       <FeedMobileTopTools
         isDesktop={isDesktop} controlsLocked={controlsLocked} active={active} fs={fs} idle={idle}
         rotated={rotated} clean={clean} currentQuality={playUrl ? (preferHevc && hevcUrl && playUrl === hevcUrl ? "HD" : "SD") : null}
-        muted={muted} onToggleMuted={() => setMuted(value => !value)}
-        swipeEnabled={kind === "video" && episodes.length > 1} swipeEp={swipeEp}
-        onToggleSwipe={() => {
-          const next = !swipeEp;
-          setSwipeEp(next);
-          toast(next ? "上下划切集已开启" : "上下划切集已关闭", "info");
-        }}
       />
       <TagBlockMenu open={active && tagMenu} tags={meta.tags} initialSelected={tagSelection} onClose={() => setTagMenu(false)} onSettings={openPreferences} />
       {!isDesktop && <MobileHoldGuide open={showHoldGuide} onClose={holdGuide.dismiss} target={holdTargetRef} bottomInset={bottomInset} />}

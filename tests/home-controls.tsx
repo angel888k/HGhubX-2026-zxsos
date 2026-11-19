@@ -68,13 +68,14 @@ function Probe() {
       onBack={() => {}} enterFs={landscape => setFullscreen(landscape)} stepDir={() => {}} canStep={() => false}
       onLike={async () => {}} onFav={async () => {}} setPanel={setPanel}
       openTag={setOpenedTag} openTagMenu={openTagMenu}
+      muted={muted} onToggleMuted={() => setMuted(value => !value)}
+      swipeEnabled swipeEp={swipeEp} onToggleSwipe={() => setSwipeEp(value => !value)}
       onBarDown={() => {}} onBarMove={() => {}} onBarUp={() => {}}
       onRetryStream={() => {}} toast={() => {}}
     />
     <FeedMobileTopTools
       isDesktop={false} controlsLocked={false} active fs={false} idle={false} rotated={false} clean={false}
-      currentQuality={preferHevc ? "HD" : "SD"} muted={muted} onToggleMuted={() => setMuted(value => !value)}
-      swipeEnabled swipeEp={swipeEp} onToggleSwipe={() => setSwipeEp(value => !value)}
+      currentQuality={preferHevc ? "HD" : "SD"}
     />
     <Sheet open={panel === "more"} label="播放设置" z="playback-settings-overlay" onClose={() => setPanel(null)}>
       <PlaybackSettingsPanel
