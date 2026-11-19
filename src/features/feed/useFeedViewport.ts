@@ -9,7 +9,7 @@ import { useFsOrientation } from "../playback/useFsOrientation";
 import type { VideoHandle } from "../playback";
 
 export type PinchState = { d0: number; mx0: number; my0: number; s0: number; x0: number; y0: number };
-export type FeedPanel = "episodes" | "comments" | "article" | "detail" | null;
+export type FeedPanel = "episodes" | "comments" | "article" | "detail" | "more" | null;
 
 type Args = {
   playerRootRef: RefObject<HTMLDivElement | null>;
