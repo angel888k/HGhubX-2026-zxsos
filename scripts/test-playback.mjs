@@ -216,10 +216,11 @@ async function gestureChecks(page) {
     surface.dispatchEvent(new PointerEvent('pointermove', at(y1)));
     surface.dispatchEvent(new PointerEvent('pointerup', { ...at(y1), buttons: 0 }));
   });
+  // 标题区不再显示集数；用切集 toast 确认两次手势均在延迟闸门释放前生效。
   await swipeUp();
-  await page.getByText('详情 · 第 2 集', { exact: true }).first().waitFor();
+  await page.locator('.a-toast').getByText('第 2集 / 3', { exact: true }).waitFor();
   await swipeUp();
-  await page.getByText('详情 · 第 3 集', { exact: true }).first().waitFor();
+  await page.locator('.a-toast').getByText('第 3集 / 3', { exact: true }).waitFor();
   await page.evaluate(() => window.__releasePlay());
   await page.waitForFunction(() => window.playerSeekFixture.logs.some(e => e.event === 'play.resolve' && e.data.video_id === 991 && e.data.episode === 3));
   assert.equal(await page.evaluate(() => window.playerSeekFixture.logs.some(e => e.event === 'play.resolve' && e.data.video_id === 992)), false,
