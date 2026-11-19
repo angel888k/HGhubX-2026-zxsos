@@ -12,7 +12,6 @@ import { tracePlayback } from "../../shared/diagnostics/playbackDiagnostics";
 import { useContentPreferences } from "../../shared/model/contentPreferences";
 import { TagBlockMenu } from "../../shared/ui/TagBlockMenu";
 import { PreferenceStorageNotice } from "../../shared/ui/PreferenceStorageNotice";
-import { InplaceSearch } from "../search/InplaceSearch";
 import MobileHoldGuide from "./MobileHoldGuide";
 import { useFsIdle } from "./fsIdle";
 import { useMobileHoldGuide } from "./useMobileHoldGuide";
@@ -55,6 +54,7 @@ export default function Feed({
   const { preferences, revision, blockReason } = contentPreferences;
   const filtering = !preferences.paused && (preferences.blockedTags.length > 0 || preferences.hideUntagged);
   const [tagMenu, setTagMenu] = useState(false);
+  const [tagSelection, setTagSelection] = useState<string[]>([]);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [tagErrors, setTagErrors] = useState<Record<string, string>>({});
   const [originEpoch, setOriginEpoch] = useState(0);
@@ -95,7 +95,6 @@ export default function Feed({
   const [vsize, setVsize] = useState({ key: "", w: 0, h: 0 });
   const [paused, setPaused] = useState(false);
   const [controlsLocked, setControlsLocked] = useState(false);
-  const [searching, setSearching] = useState(false);
   const [rate, setRate] = useState(1);
   const [waiting, setWaiting] = useState(false);
   const [err, setErr] = useState("");
@@ -156,11 +155,10 @@ export default function Feed({
   const allowed = !filtering || (tagsReady && !blocked);
   const closePanels = () => { setPanel(null); setTagMenu(false); };
   const openPreferences = () => { closePanels(); store.push({ kind: "settings", section: "内容偏好" }); };
-  const openTagMenu = () => { setPanel(null); setTagMenu(true); };
+  const openTagMenu = (selected: string[] = []) => { setTagSelection(selected); setPanel(null); setTagMenu(true); };
   const openTag = (tag: string) => { closePanels(); store.push({ kind: "tag", tag, name: tag }); };
 
-  useEffect(() => { setTagMenu(false); }, [curId, store.lineEpoch, accountScope]);
-  useEffect(() => { if (!active) setSearching(false); }, [active]);
+  useEffect(() => { setTagMenu(false); setTagSelection([]); }, [curId, store.lineEpoch, accountScope]);
   useEffect(() => {
     store.setLocked(active && controlsLocked);
     return () => { if (active) store.setLocked(false); };
@@ -495,7 +493,7 @@ export default function Feed({
 
   /* 键盘 */
   useEffect(() => {
-    if (!active || !allowed || controlsLocked || showHoldGuide || tagMenu || searching) return;
+    if (!active || !allowed || controlsLocked || showHoldGuide || tagMenu) return;
     const seekRelative = (delta: number) => {
       const current = videoRef.current?.el()?.currentTime ?? 0;
       videoRef.current?.seek(Math.max(0, current + delta), "keyboard_shortcut");
@@ -529,7 +527,7 @@ export default function Feed({
     window.addEventListener("keydown", fn);
     return () => window.removeEventListener("keydown", fn);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, allowed, controlsLocked, showHoldGuide, tagMenu, searching, panel, index, stepDir, accountScope, curEp, kind, liked, collected, likePending, collectPending]);
+  }, [active, allowed, controlsLocked, showHoldGuide, tagMenu, panel, index, stepDir, accountScope, curEp, kind, liked, collected, likePending, collectPending]);
 
   /* 安卓返回键：面板打开时先关面板（按活跃实例栈式注册，不覆盖其他页面拦截器） */
   useEffect(() => {
@@ -614,8 +612,8 @@ export default function Feed({
                       <>
                         {/* 老 WebView 不认识 inset 简写；四边写法保证缩放舞台铺满（#138）。 */}
                     <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, transform: isDesktop ? undefined : `translate3d(${zoom.x}px, ${zoom.y}px, 0) scale(${zoom.s})`, transformOrigin: "center center", transition: isDesktop || zoom.g ? "none" : "transform .18s ease-out" }}>
-                      <VideoSurface ref={videoRef} src={playUrl} poster={posterUrl} autoPlay active={active && !tagMenu && !showHoldGuide && !searching} muted={muted}
-                        diagnosticContext={{ active: active && !tagMenu && !showHoldGuide && !searching, view: mode, kind, video_id: curId, episode: curEp }}
+                      <VideoSurface ref={videoRef} src={playUrl} poster={posterUrl} autoPlay active={active && !tagMenu && !showHoldGuide} muted={muted}
+                        diagnosticContext={{ active: active && !tagMenu && !showHoldGuide, view: mode, kind, video_id: curId, episode: curEp }}
                         volume={volume} rate={effRate}
                         measurementKey={measurementKey}
                         fit={!isDesktop && landscapeVideo && !fs && !vpLandscape ? portraitFit : "contain"}
@@ -661,14 +659,14 @@ export default function Feed({
                   isActive={isActive} isDesktop={isDesktop} fs={fs} clean={clean} mode={mode} kind={kind}
                   title={title} index={index} effectiveLength={effectiveVideoIds.length} bottomInset={bottomInset}
                   curEp={curEp} duration={duration} meta={meta} post={post} hevcUrl={hevcUrl}
-                  preferHevc={preferHevc} setPreferHevc={setPreferHevc} swipeEp={swipeEp} setSwipeEp={setSwipeEp}
+                  preferHevc={preferHevc} setPreferHevc={setPreferHevc}
                   landscapeVideo={landscapeVideo} capsuleOn={capsuleOn} zoom={zoom} setZoom={setZoom}
                   portraitFit={portraitFit} setPortraitFit={setPortraitFit}
                   liked={liked} collected={collected} likePending={likePending} collectPending={collectPending}
                   heartBurst={heartBurst} likeCount={likeCount} collectCount={collectCount}
                   paused={paused} waiting={waiting} err={err} scrub={scrub} barRef={barRef} barPct={barPct}
                   playbackClock={playbackClock} onBack={onBack} enterFs={enterFs} stepDir={stepDir} canStep={canStep}
-                  onLike={onLike} onFav={onFav} setPanel={setPanel}
+                  onLike={onLike} onFav={onFav} setPanel={setPanel} openTag={openTag} openTagMenu={openTagMenu}
                   onBarDown={onBarDown} onBarMove={onBarMove} onBarUp={onBarUp}
                   onRetryStream={() => {
                     setErr(""); setWaiting(true);
@@ -689,6 +687,7 @@ export default function Feed({
           paused={paused} duration={duration} rate={rate} setRate={setRate} effRate={effRate}
           holdSpeed={holdSpeed} holdSlow={holdSlow} speedLock={speedLock} setSpeedLock={setSpeedLock} lockArmed={lockArmed}
           muted={muted} setMuted={setMuted} volume={volume} setVolume={setVolume} swipeEp={swipeEp} setSwipeEp={setSwipeEp}
+          preferHevc={preferHevc} setPreferHevc={setPreferHevc} portraitFit={portraitFit} setPortraitFit={setPortraitFit}
           playKey={playKey} curId={curId} curEp={curEp} index={index} effectiveLength={effectiveVideoIds.length}
           kind={kind} meta={meta} likeCount={likeCount} collectCount={collectCount}
           episodes={episodes} related={related} follows={store.follows} followPending={followPending}
@@ -701,16 +700,10 @@ export default function Feed({
 
       <FeedMobileTopTools
         isDesktop={isDesktop} controlsLocked={controlsLocked} active={active} fs={fs} idle={idle}
-        rotated={rotated} clean={clean} muted={muted} setMuted={setMuted}
+        rotated={rotated} clean={clean} currentQuality={playUrl ? (preferHevc && hevcUrl && playUrl === hevcUrl ? "HD" : "SD") : null}
         lockControls={lockControls}
-        onSearchTab={() => { if (mode === "context") setSearching(true); else store.setTab("search"); }}
       />
-      {searching && active && (
-        <InplaceSearch kind={kind} wide={isDesktop} onClose={() => setSearching(false)}
-          onOpenVideo={(v, list, kw) => store.push({ kind: "feed", videoIds: list.map(x => x.id), index: list.findIndex(x => x.id === v.id), title: kw ? `搜索 · ${kw}` : "搜索" })}
-          onOpenPost={(p) => store.push({ kind: "post", id: p.id })} />
-      )}
-      <TagBlockMenu open={active && tagMenu} tags={meta.tags} onClose={() => setTagMenu(false)} onSettings={openPreferences} />
+      <TagBlockMenu open={active && tagMenu} tags={meta.tags} initialSelected={tagSelection} onClose={() => setTagMenu(false)} onSettings={openPreferences} />
       {!isDesktop && <MobileHoldGuide open={showHoldGuide} onClose={holdGuide.dismiss} target={holdTargetRef} bottomInset={bottomInset} />}
       {controlsLocked && <PlaybackLock active={active} rotated={rotated} immersive={!isDesktop && fs && !rotated} onUnlock={() => { setControlsLocked(false); wake(); }} />}
     </div>

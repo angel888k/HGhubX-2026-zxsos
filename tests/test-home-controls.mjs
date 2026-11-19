@@ -1,0 +1,127 @@
+import assert from "node:assert/strict";
+import path from "node:path";
+import { mkdir } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { chromium } from "playwright-core";
+import { createServer } from "vite";
+
+const root = fileURLToPath(new URL("..", import.meta.url));
+const output = path.join(root, "test-results");
+const vite = await createServer({
+  root,
+  configFile: path.join(root, "vite.config.ts"),
+  logLevel: "error",
+  server: { host: "127.0.0.1", port: 0, strictPort: false },
+});
+let browser;
+try {
+  await vite.listen();
+  browser = await chromium.launch({
+    headless: true,
+    executablePath: process.env.BROWSER_EXECUTABLE || undefined,
+    args: ["--no-sandbox", "--disable-dev-shm-usage"],
+  });
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true,
+    userAgent: "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36" });
+  const page = await context.newPage();
+  const errors = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await mkdir(output, { recursive: true });
+  const origin = vite.resolvedUrls.local[0];
+  await page.goto(new URL("/tests/home-controls.html", origin).href, { waitUntil: "networkidle" });
+  await page.locator(".mobile-playback-dock").waitFor();
+  const probe = name => page.evaluate(key => window.homeControlsProbe[key](), name);
+
+  const railOrder = await page.locator(".mobile-video-action-rail>button").evaluateAll(buttons => buttons.map(button => button.getAttribute("aria-label")));
+  assert.deepEqual(railOrder, ["点赞", "收藏", "评论 89 条", "更多播放设置"]);
+  assert.equal(await page.locator(".mobile-playback-episodes").innerText(), "选集 · 全109集");
+  assert.equal(await page.locator(".feed-current-quality").innerText(), "HD");
+  assert.equal(await page.getByRole("button", { name: "搜索", exact: true }).count(), 0);
+  const portraitMore = await page.getByRole("button", { name: "更多播放设置" }).boundingBox();
+  const portraitDock = await page.locator(".mobile-playback-dock").boundingBox();
+  assert.ok(portraitMore && portraitDock && portraitMore.y + portraitMore.height < portraitDock.y);
+  await page.screenshot({ path: path.join(output, "home-portrait.png") });
+  console.log("✓ portrait rail, real episode total, HD badge, and no top search");
+
+  await page.locator(".mobile-playback-episodes").click();
+  assert.equal(await probe("panel"), "episodes");
+  await page.getByRole("button", { name: "全屏", exact: true }).click();
+  assert.equal(await probe("fullscreen"), false);
+  console.log("✓ episode dock and fullscreen actions use the existing callbacks");
+
+  await page.getByRole("button", { name: "查看标签 都市，长按可屏蔽" }).click();
+  assert.equal(await probe("openedTag"), "都市");
+  const sweetTag = page.getByRole("button", { name: "查看标签 甜宠，长按可屏蔽" });
+  await sweetTag.dispatchEvent("pointerdown", { pointerId: 1, pointerType: "touch", isPrimary: true, button: 0, buttons: 1 });
+  await page.waitForTimeout(600);
+  await sweetTag.dispatchEvent("pointerup", { pointerId: 1, pointerType: "touch", isPrimary: true, button: 0, buttons: 0 });
+  await page.locator(".content-tag-menu").waitFor();
+  assert.equal(await page.getByRole("button", { name: "甜宠", exact: true }).getAttribute("data-selected"), "true");
+  assert.deepEqual(await probe("tagSelection"), ["甜宠"]);
+  await page.locator(".content-tag-menu-header button").click();
+  console.log("✓ tap opens related content and long press preselects the held tag");
+
+  await page.getByRole("button", { name: "更多播放设置" }).click();
+  await page.locator(".playback-settings-sheet").waitFor();
+  await page.waitForTimeout(350);
+  await page.screenshot({ path: path.join(output, "home-settings-portrait.png") });
+  const hdToggle = page.locator(".playback-setting-row").filter({ hasText: "优先高清" }).getByRole("switch");
+  assert.equal(await hdToggle.getAttribute("aria-checked"), "true");
+  await hdToggle.click();
+  assert.equal(await probe("preferHevc"), false);
+  assert.equal(await page.locator(".feed-current-quality").innerText(), "SD");
+  await page.getByRole("button", { name: "倍速 1.5 倍", exact: true }).click();
+  assert.equal(await probe("rate"), 1.5);
+  await page.getByRole("button", { name: "铺满", exact: true }).click();
+  assert.equal(await probe("portraitFit"), "cover");
+  await page.locator(".playback-setting-row").filter({ hasText: "上下划切集" }).getByRole("switch").click();
+  assert.equal(await probe("swipeEp"), false);
+  await page.locator(".playback-setting-row").filter({ hasText: "静音" }).getByRole("switch").click();
+  assert.equal(await probe("muted"), false);
+  await page.locator(".playback-setting-action").filter({ hasText: "屏幕锁定" }).click();
+  assert.equal(await probe("locked"), true);
+  await page.locator(".playback-settings-sheet").waitFor({ state: "detached" });
+  console.log("✓ quality, rate, fit, swipe, mute, and screen lock update real state");
+
+  await page.getByRole("button", { name: "更多播放设置" }).click();
+  await page.locator(".playback-setting-action").filter({ hasText: "不感兴趣" }).click();
+  await page.locator(".content-tag-menu").waitFor();
+  assert.deepEqual(await probe("tagSelection"), []);
+  assert.equal(await page.locator('.content-tag-option[data-selected="true"]').count(), 0);
+  await page.locator(".content-tag-menu-header button").click();
+  console.log("✓ the more-panel disinterest entry opens an empty tag selection");
+
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.waitForTimeout(150);
+  const positions = await page.locator(".mobile-video-action-rail>button").evaluateAll(buttons => buttons.map(button => {
+    const rect = button.getBoundingClientRect();
+    return { label: button.getAttribute("aria-label"), x: rect.x, y: rect.y };
+  }));
+  assert.ok(positions[0].x < positions[3].x);
+  assert.ok(positions[0].y < positions[1].y && positions[1].y < positions[2].y);
+  assert.ok(Math.abs(positions[2].y - positions[3].y) < 2);
+  const landscapeMore = await page.getByRole("button", { name: "更多播放设置" }).boundingBox();
+  const landscapeDock = await page.locator(".mobile-playback-dock").boundingBox();
+  assert.ok(landscapeMore && landscapeDock && landscapeMore.y + landscapeMore.height < landscapeDock.y);
+  await page.screenshot({ path: path.join(output, "home-landscape.png") });
+  await page.getByRole("button", { name: "更多播放设置" }).click();
+  const drawer = await page.locator(".playback-settings-overlay .ios-dialog").boundingBox();
+  assert.ok(drawer && drawer.x > 400 && drawer.width <= 381 && Math.abs(drawer.height - 390) < 2);
+  await page.waitForTimeout(350);
+  await page.screenshot({ path: path.join(output, "home-settings-landscape.png") });
+  await page.getByRole("button", { name: "关闭播放设置" }).click();
+  console.log("✓ landscape keeps social actions left and opens playback settings as a right drawer");
+
+  await page.getByRole("button", { name: "查看标签 都市，长按可屏蔽" }).dispatchEvent("contextmenu", { button: 2 });
+  await page.locator(".content-preference-overlay .ios-dialog").waitFor();
+  const tagDrawer = await page.locator(".content-preference-overlay .ios-dialog").boundingBox();
+  assert.ok(tagDrawer && tagDrawer.x > 400 && tagDrawer.width <= 381 && Math.abs(tagDrawer.height - 390) < 2);
+  assert.equal(await page.getByRole("button", { name: "都市", exact: true }).getAttribute("data-selected"), "true");
+  console.log("✓ landscape tag blocking also uses a right drawer with the current tag selected");
+
+  assert.deepEqual(errors, []);
+  console.log("Home controls browser tests passed.");
+} finally {
+  if (browser) await browser.close();
+  await vite.close();
+}
