@@ -238,7 +238,7 @@ try {
     }], "The first batch removal is pending on the initiating account");
 
     await page.evaluate(() => window.__switchAccount__());
-    await page.getByText("切换后的用户", { exact: true }).waitFor();
+    await page.locator(".ios-account-card").getByText("切换后的用户", { exact: true }).waitFor();
     await page.getByRole("button", { name: "城市与晚风", exact: true }).waitFor();
     await page.getByRole("button", { name: "重逢在夏日以后", exact: true }).waitFor();
     await page.waitForFunction(() => {
