@@ -280,7 +280,6 @@ export default function FeedItemChrome({
                 {!!meta.author && <div className="mobile-video-author">@{meta.author}</div>}
                 <p className="text-[15px] font-semibold leading-snug hg-ink-2 hg-ov-shadow-strong clamp-2">{meta.title}</p>
                 <CurrentVideoTags tags={meta.tags} onOpen={openTag} onBlock={tag => openTagMenu([tag])} />
-                {meta.tags.length > 0 && <div className="current-video-tags-hint">点按查看同类 · 长按屏蔽</div>}
               </div>
             </div>
           )}
