@@ -20,7 +20,7 @@
   `useContentPreferences()`。
 - 本地账号：[`src/shared/model/accountData.ts`](../../src/shared/model/accountData.ts) 的 `ACCOUNT_KEY`、`CREDENTIAL_KEY`、
   `SyncState`、`favoritesKnown`、`favEpCounts`、`sanitize()`、`persist()`、`setUser()`、`syncAccount()`、`clearHistory()`、
-  `addHistory()`、`accountScope`、`saveCredential()`/`readCredential()`/`clearCredential()`；收藏观看进度与新集更新计算见
+  `removeHistory()`、`addHistory()`、`accountScope`、`saveCredential()`/`readCredential()`/`clearCredential()`；收藏观看进度与新集更新计算见
   [`src/shared/model/favoriteProgress.ts`](../../src/shared/model/favoriteProgress.ts)。
 - 应用偏好：[`src/shared/model/store.tsx`](../../src/shared/model/store.tsx) 的 `Persist`、`DEFAULTS`、
   `normalizeHistory()`、`loadPersist()`、`readThemePreference()`、`LS`、
@@ -79,7 +79,7 @@
    不能显示“还没有收藏”。
 6. 游客数据由 `store.tsx` 的 `saveGuest` 写入 `STORAGE_KEYS.app`；登录用户的数据写
    `ACCOUNT_KEY`。登录/退出时 `setUser()` 清空 pending、上传计时器和同步状态，但不清空本地
-   收藏/历史对象；账号同步的合并、dirty history 和 `clearHistory()` 的远端删除见
+   收藏/历史对象；账号同步的合并、dirty history、`clearHistory()` 和 `removeHistory()` 的远端删除见
    `accountData.ts`。登录/注册成功另写 `CREDENTIAL_KEY`；显式退出、静默重登被上游拒绝
    （密码错误）或重登返回不同账号时清除它。
 7. `SessionStore` 把 `{origin, token, user, revision}` 写入应用数据目录的 `session.json`。
@@ -105,6 +105,9 @@
   成功返回 `favorite_video_ids`（即使为空）→ true → 才允许显示“还没有收藏”。
 - 清历史：确认 → 增加 `clearVersion`、取消定时上传 → 远端分批删除当前账号历史 →
   本地写空数组；账号切换或清除代次变化时丢弃旧结果。
+- 选择性删除历史：`removeHistory(ids)` 取消定时上传并等待当前同步/上传结束 → 读取远端历史，把选中
+  `video_id` 映射为删除接口所需的行 `id` 并分批删除 → 过滤本地选中记录及其 dirty/local 标记；
+  未选中的 dirty history 恢复定时上传，失败保留本地快照，账号切换丢弃旧结果。
 - 清缓存：媒体内存缓存 → 平台缓存报告；不改账号、收藏、历史、会话、线路、代理或主题。
 - TV 启动 PIN：设置模态按 `verify → enter → confirm` 推进（`setup` 直接从 `enter` 开始）；
   凑满 4 位时 `appendDigit` 同步清空输入缓冲并回调 `onComplete`，confirm 与 draft 不一致时清
