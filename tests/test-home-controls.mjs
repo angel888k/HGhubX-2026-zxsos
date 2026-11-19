@@ -32,6 +32,17 @@ try {
   await page.locator(".mobile-playback-dock").waitFor();
   const probe = name => page.evaluate(key => window.homeControlsProbe[key](), name);
 
+  const swipe = async (locator, startX, dx, dy = 0) => {
+    const box = await locator.boundingBox();
+    assert.ok(box);
+    const y = box.y + Math.min(40, box.height / 3);
+    await page.mouse.move(box.x + startX, y);
+    await page.mouse.down();
+    await page.mouse.move(box.x + startX + dx, y + dy, { steps: 8 });
+    await page.mouse.up();
+    await page.waitForTimeout(150);
+  };
+
   const railOrder = await page.locator(".mobile-video-action-rail>button").evaluateAll(buttons => buttons.map(button => button.getAttribute("aria-label")));
   assert.deepEqual(railOrder, ["点赞", "收藏", "评论 89 条", "更多播放设置"]);
   assert.equal(await page.locator(".mobile-playback-episodes").innerText(), "选集 · 全109集");
@@ -68,6 +79,30 @@ try {
 
   await page.locator(".mobile-playback-episodes").click();
   assert.equal(await probe("panel"), "episodes");
+  const panelBody = page.locator(".video-details-sheet-body");
+  await panelBody.waitFor();
+  await swipe(panelBody, 24, 110);
+  assert.equal(await probe("panel"), "detail");
+  assert.equal(await page.getByTestId("detail-content").count(), 1);
+
+  const related = page.getByTestId("related-scroll");
+  await related.scrollIntoViewIfNeeded();
+  const relatedBox = await related.boundingBox();
+  assert.ok(relatedBox);
+  await page.mouse.move(relatedBox.x + 20, relatedBox.y + relatedBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(relatedBox.x + 160, relatedBox.y + relatedBox.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await page.waitForTimeout(150);
+  assert.equal(await probe("panel"), "detail");
+  console.log("✓ related-content carousel keeps its horizontal swipe without changing tabs");
+
+  await swipe(panelBody, 130, -110);
+  assert.equal(await probe("panel"), "episodes");
+  await swipe(panelBody, 24, 0, 160);
+  assert.equal(await probe("panel"), null);
+  console.log("✓ panel tabs switch with horizontal swipes and a top downward swipe closes the sheet");
+
   await page.getByRole("button", { name: "全屏", exact: true }).click();
   assert.equal(await probe("fullscreen"), false);
   console.log("✓ episode dock and fullscreen actions use the existing callbacks");

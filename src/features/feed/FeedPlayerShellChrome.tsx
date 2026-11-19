@@ -9,6 +9,7 @@ import { PlaybackProgress, PlaybackTime, PlayerControls, type PlaybackClock, typ
 import type { FeedMeta } from "./useFeedActions";
 import type { FeedPanel } from "./useFeedViewport";
 import { PlaybackSettingsPanel } from "./PlaybackSettingsPanel";
+import { PanelSwipeArea } from "./PanelSwipeArea";
 import {
   IBoltF, IClose, ICompress, IPauseF, IPlayF, IVertSwap, IVol, IVolMute,
 } from "../../shared/ui/icons";
@@ -329,13 +330,15 @@ export function FeedPlayerShellChrome({
                 </Button>
               </div>
 
-              <div className="flex-1 min-h-0 flex flex-col">
-                <Suspense fallback={<PanelFallback />}>
-                  {panel === "episodes" ? (
-                    <EpisodesPanel bare videoId={curId} episodes={episodes} current={curEp} onPick={pickEp} onClose={() => setPanel(null)} />
-                  ) : (panel === "detail" ? detailBody() : null)}
-                </Suspense>
-              </div>
+              {panel === "detail" || panel === "episodes" ? (
+                <PanelSwipeArea panel={panel} onChange={setPanel}>
+                  <Suspense fallback={<PanelFallback />}>
+                    {panel === "episodes" ? (
+                      <EpisodesPanel bare videoId={curId} episodes={episodes} current={curEp} onPick={pickEp} onClose={() => setPanel(null)} />
+                    ) : detailBody()}
+                  </Suspense>
+                </PanelSwipeArea>
+              ) : null}
             </div>
           </Sheet>
         </>
