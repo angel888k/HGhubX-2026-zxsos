@@ -36,6 +36,7 @@ function Probe() {
   const [openedTag, setOpenedTag] = useState("");
   const [fullscreen, setFullscreen] = useState<boolean | null>(null);
   const [locked, setLocked] = useState(false);
+  const [clean, setClean] = useState(false);
   const openTagMenu = (selected: string[] = []) => {
     setTagSelection(selected);
     setPanel(null);
@@ -53,13 +54,16 @@ function Probe() {
         openedTag: () => openedTag,
         fullscreen: () => fullscreen,
         locked: () => locked,
+        clean: () => clean,
+        setClean: (value: boolean) => setClean(value),
+        setLocked: (value: boolean) => setLocked(value),
         tagSelection: () => tagSelection,
       },
     });
   });
   return <div className="probe-stage">
     <FeedItemChrome
-      isActive isDesktop={false} fs={false} clean={false} mode="home" kind="video" title="示例剧名"
+      isActive isDesktop={false} fs={false} clean={clean} mode="home" kind="video" title="示例剧名"
       index={0} effectiveLength={1} bottomInset={0} curEp={1} duration={120} meta={meta} hevcUrl="hevc.mp4"
       preferHevc={preferHevc} setPreferHevc={setPreferHevc}
       landscapeVideo={false} capsuleOn={false} zoom={{ s: 1, x: 0, y: 0, g: false }} setZoom={() => {}}
@@ -72,11 +76,12 @@ function Probe() {
       openTag={setOpenedTag} openTagMenu={openTagMenu}
       muted={muted} onToggleMuted={() => setMuted(value => !value)}
       swipeEnabled swipeEp={swipeEp} onToggleSwipe={() => setSwipeEp(value => !value)}
+      onLock={() => setLocked(true)}
       onBarDown={() => {}} onBarMove={() => {}} onBarUp={() => {}}
       onRetryStream={() => {}} toast={() => {}}
     />
     <FeedMobileTopTools
-      isDesktop={false} controlsLocked={false} active fs={false} idle={false} rotated={false} clean={false}
+      isDesktop={false} controlsLocked={false} active fs={false} idle={false} rotated={false} clean={clean}
       currentQuality={preferHevc ? "HD" : "SD"}
     />
     <Sheet open={panel === "more"} label="播放设置" z="playback-settings-overlay" onClose={() => setPanel(null)}>

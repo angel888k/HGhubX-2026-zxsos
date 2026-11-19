@@ -48,6 +48,15 @@ try {
   await page.screenshot({ path: path.join(output, "home-portrait.png") });
   console.log("✓ portrait rail, real episode total, HD badge, bottom quick controls, and one panel entry");
 
+  await page.evaluate(() => window.homeControlsProbe.setClean(true));
+  await page.locator(".mobile-clean-lock").waitFor();
+  assert.equal(await page.locator(".feed-current-quality").count(), 0);
+  await page.screenshot({ path: path.join(output, "home-clean.png") });
+  await page.getByRole("button", { name: "屏幕锁定", exact: true }).click();
+  assert.equal(await probe("locked"), true);
+  await page.evaluate(() => { window.homeControlsProbe.setLocked(false); window.homeControlsProbe.setClean(false); });
+  console.log("✓ clean-screen playback shows a left-center screen-lock control");
+
   await page.getByRole("button", { name: "取消静音" }).click();
   assert.equal(await probe("muted"), false);
   await page.getByRole("button", { name: "关闭上下划切集" }).click();
