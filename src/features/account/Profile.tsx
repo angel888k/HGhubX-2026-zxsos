@@ -22,7 +22,7 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
   const {
     user, setLoginOpen, logout, history, favs, postFavs, favEpCounts,
     seedFavoriteEpisodes, ackFavoriteEpisodes, setCollected, toast,
-    clearHistory, push, accountSync, syncAccount,
+    clearHistory, removeHistory, push, accountSync, syncAccount,
   } = useStore();
   const [tab, setTab] = useState<"fav" | "history">("fav");
   const [favKind, setFavKind] = useState<"video" | "post">("video");
@@ -47,6 +47,11 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
   const [clearBusy, setClearBusy] = useState(false);
   const [clearError, setClearError] = useState("");
   const clearing = useRef(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [removeOpen, setRemoveOpen] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [removeError, setRemoveError] = useState("");
+  const removalPending = useRef(false);
   const [blockedPrompt, setBlockedPrompt] = useState<{
     id: number; kind: "video" | "post"; reason: string; removableFav: boolean;
   } | null>(null);
@@ -55,6 +60,7 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
 
   const showingPosts = tab === "fav" && favKind === "post";
+  const selectionMode = selectedIds.length > 0;
   const limitKey = tab === "history" ? "history" : showingPosts ? "favPost" : "favVideo";
   const ids = tab === "history" ? history.map((h) => h.id) : showingPosts ? postFavs : favs;
   const visibleIds = ids.slice(0, limits[limitKey]);
@@ -185,6 +191,44 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
     }
   };
 
+  const toggleSelection = (id: number) => {
+    setSelectedIds(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id]);
+  };
+  const beginSelection = (id: number) => {
+    setSelectedIds(current => current.includes(id) ? current : [...current, id]);
+  };
+  const confirmRemoveSelected = async () => {
+    if (removalPending.current || !selectedIds.length) return;
+    removalPending.current = true;
+    setRemoving(true); setRemoveError("");
+    const targets = [...selectedIds];
+    try {
+      if (tab === "history") {
+        await removeHistory(targets);
+      } else {
+        const failed: number[] = [];
+        for (const id of targets) {
+          try { await setCollected(showingPosts ? "post" : "video", id, false); }
+          catch { failed.push(id); }
+        }
+        if (failed.length) {
+          setSelectedIds(failed);
+          throw new Error(failed.length === targets.length ? "移除失败，请重试" : `已移除 ${targets.length - failed.length} 项，${failed.length} 项失败，请重试`);
+        }
+      }
+      if (mounted.current) {
+        setSelectedIds([]);
+        setRemoveOpen(false);
+        toast(tab === "history" ? `已删除 ${targets.length} 条观看历史` : `已取消收藏 ${targets.length} 项`, "info");
+      }
+    } catch (error) {
+      if (mounted.current) setRemoveError(error instanceof Error ? error.message : "移除失败，请重试");
+    } finally {
+      removalPending.current = false;
+      if (mounted.current) setRemoving(false);
+    }
+  };
+
   return (
     <div className="ios-page absolute inset-0 bg-bg flex flex-col">
       <div className="ios-page-heading shrink-0 flex items-center">
@@ -253,16 +297,16 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
         {/* 我的内容 */}
         <SegmentedControl className="mt-4" aria-label="我的内容" activeIndex={tab === "fav" ? 0 : 1}>
           {([["fav", "我的收藏"], ["history", "观看历史"]] as const).map(([k, l]) => (
-            <Button aria-pressed={tab === k} key={k} onClick={() => setTab(k)}>{l}</Button>
+            <Button aria-pressed={tab === k} key={k} onClick={() => { setTab(k); setSelectedIds([]); }}>{l}</Button>
           ))}
         </SegmentedControl>
 
         {tab === "fav" && !favoriteStateUnknown && (favs.length > 0 || postFavs.length > 0 || favKind === "post") && (
           <div className="mt-2.5 flex items-center gap-2" role="group" aria-label="收藏内容类型">
-            <Button aria-pressed={favKind === "video"} onClick={() => setFavKind("video")} className="ios-filter-pill">
+            <Button aria-pressed={favKind === "video"} onClick={() => { setFavKind("video"); setSelectedIds([]); }} className="ios-filter-pill">
               短剧{favs.length ? ` ${favs.length}` : ""}
             </Button>
-            <Button aria-pressed={favKind === "post"} onClick={() => setFavKind("post")} className="ios-filter-pill">
+            <Button aria-pressed={favKind === "post"} onClick={() => { setFavKind("post"); setSelectedIds([]); }} className="ios-filter-pill">
               帖子{postFavs.length ? ` ${postFavs.length}` : ""}
             </Button>
             {updatedFavCount > 0 && (
@@ -272,6 +316,12 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
             )}
           </div>
         )}
+
+        {selectionMode && <div role="region" aria-label="批量管理" className="sticky top-0 z-20 -mx-1 mt-2 flex items-center gap-2 bg-bg/95 px-1 py-2 text-[13px] backdrop-blur">
+          <span className="font-semibold text-on">已选 {selectedIds.length} 项</span>
+          <Button className="ml-auto px-2 text-primary" onClick={() => { setSelectedIds([]); setRemoveError(""); }}>取消</Button>
+          <Button variant="danger" className="rounded-(--r-ctl) px-3" onClick={() => { setRemoveError(""); setRemoveOpen(true); }}>移除</Button>
+        </div>}
 
         <div className="mt-3" aria-busy={loading || syncingFavorites}>
           {favoriteSyncFailed ? (
@@ -288,7 +338,9 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
                 const reason = blockReason(p.tags);
                 return <MediaCard key={p.id} blockedReason={reason} title={p.title} cover={p.cover}
                   subtitle={p.tags?.slice(0, 2).join(" · ") || `${fmt(p.hot)} 次浏览`}
+                  selectionMode={selectionMode} selected={selectedIds.includes(p.id)} onLongPress={() => beginSelection(p.id)}
                   onOpen={() => {
+                    if (selectionMode) { toggleSelection(p.id); return; }
                     if (reason) setBlockedPrompt({ id: p.id, kind: "post", reason, removableFav: true });
                     else push({ kind: "post", id: p.id });
                   }} />;
@@ -310,7 +362,9 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
                   badgeTone={unwatchedNew > 0 ? "update" : "default"}
                   subtitle={subtitle}
                   progress={formatWatchProgress(progress, latestCount, c.is_finished)}
+                  selectionMode={selectionMode} selected={selectedIds.includes(c.id)} onLongPress={() => beginSelection(c.id)}
                   onOpen={() => {
+                    if (selectionMode) { toggleSelection(c.id); return; }
                     if (reason) {
                       setBlockedPrompt({ id: c.id, kind: "video", reason, removableFav: tab === "fav" });
                       return;
@@ -360,6 +414,24 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
 
         <div className="text-center text-[12px] text-dim mt-5">HGhubX {APP_VERSION} · {platform === "android" ? "Android" : platform === "ios" ? "iOS" : platform === "macos" ? "macOS" : platform === "linux" ? "Linux" : "Windows"} 客户端</div>
       </div>
+      <Modal open={removeOpen} onClose={() => { if (!removalPending.current) setRemoveOpen(false); }} label="批量移除">
+        <div className="p-5">
+          <h2 className="text-[18px] font-bold">{tab === "history" ? "删除所选观看历史" : "取消收藏所选内容"}</h2>
+          <p className="mt-2 text-[14px] text-mut">
+            {tab === "history"
+              ? `确认删除选中的 ${selectedIds.length} 条观看历史？收藏不会受影响。`
+              : `确认取消收藏选中的 ${selectedIds.length} 项内容？观看历史不会受影响。`}
+            {user ? "当前账号的云端数据与本机缓存都会更新。" : "此操作只会修改本机记录。"}
+          </p>
+          {removeError && <p role="alert" className="mt-3 text-[13px] text-danger">{removeError}</p>}
+          <div className="mt-4 flex gap-3">
+            <Button variant="secondary" disabled={removing} onClick={() => setRemoveOpen(false)} className="flex-1">取消</Button>
+            <Button variant="danger" disabled={removing || !selectedIds.length} aria-busy={removing} onClick={() => void confirmRemoveSelected()} className="flex-1 rounded-(--r-ctl) px-3">
+              {removing ? "正在移除…" : "确认移除"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
       <Modal open={!!blockedPrompt} onClose={() => { if (!removingBlocked) setBlockedPrompt(null); }} label="内容已屏蔽">
         {blockedPrompt && (
           <div className="p-5">

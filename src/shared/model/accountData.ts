@@ -414,6 +414,42 @@ export function useAccountData(initialGuest: GuestData, saveGuest: (data: GuestD
       if (isCurrent(version)) { historyMutation.current++; clearVersion.current++; sentHistory.current.clear(); persist({ ...state.current!.data, history: [], dirtyHistory: {}, localHistory: [] }); }
     } finally { if (clearing.current === version) clearing.current = null; }
   }, []);
+  const removeHistory = useCallback(async (videoIds: number[]) => {
+    const targetIds = new Set(videoIds.filter(id => Number.isSafeInteger(id) && id > 0));
+    if (!targetIds.size) return;
+    const version = state.current!.generation;
+    if (clearing.current === version) throw new Error("另一项观看记录操作正在进行，请稍后重试");
+    clearing.current = version;
+    historyMutation.current++; clearVersion.current++;
+    render();
+    window.clearTimeout(flushTimer.current); flushTimer.current = undefined;
+    try {
+      if (state.current!.user) {
+        if (synchronizing.current?.generation === version) await synchronizing.current.promise.catch(() => {});
+        if (!isCurrent(version)) throw new Error("账号已切换");
+        if (upload.current?.generation === version) await upload.current.promise.catch(() => {});
+        if (!isCurrent(version)) throw new Error("账号已切换");
+        const auth = identity();
+        const rows = await readHistory(auth, version);
+        const rowIds = rows.filter(row => row.target_type === "video" && targetIds.has(row.video_id)).map(row => row.id);
+        for (let offset = 0; offset < rowIds.length; offset += 100) {
+          await api.accountHistoryDelete(auth, rowIds.slice(offset, offset + 100));
+          if (!isCurrent(version)) throw new Error("账号已切换");
+        }
+      }
+      if (isCurrent(version)) {
+        const current = state.current!.data;
+        const dirtyHistory = Object.fromEntries(Object.entries(current.dirtyHistory).filter(([id]) => !targetIds.has(Number(id))));
+        for (const id of targetIds) sentHistory.current.delete(id);
+        historyMutation.current++; clearVersion.current++;
+        persist({ ...current, history: current.history.filter(row => !targetIds.has(row.id)), dirtyHistory,
+          localHistory: current.localHistory.filter(id => !targetIds.has(id)) });
+      }
+    } finally {
+      if (clearing.current === version) clearing.current = null;
+      if (isCurrent(version) && state.current!.user && Object.keys(state.current!.data.dirtyHistory).length) scheduleUpload(version);
+    }
+  }, []);
   const seedFavoriteEpisodes = useCallback((entries: Record<number, number>) => {
     const cur = state.current!.data;
     const favSet = new Set(cur.favs);
@@ -455,10 +491,10 @@ export function useAccountData(initialGuest: GuestData, saveGuest: (data: GuestD
     isFav: (id: number, kind: Kind = "video") => (kind === "video" ? s.data.favs : s.data.postFavs).includes(id),
     isLiked: (id: number, ep?: number, kind: Kind = "video") => kind === "post" ? s.data.postLikes.includes(id)
       : ep !== undefined && s.data.likeEpisodes ? s.data.likeEpisodes.some(row => row.video_id === id && row.ep === ep) : s.data.likes.includes(id),
-    setCollected, setLiked, setFollowing, addHistory, clearHistory,
+    setCollected, setLiked, setFollowing, addHistory, clearHistory, removeHistory,
     actionPending: (key: string) => pending.current.has(key),
     toggleLikeLocal: (id: number) => localToggle("likes", id),
     toggleFavLocal: (id: number) => localToggle("favs", id),
     toggleFollowLocal: (id: number) => localToggle("follows", id),
-  }), [rev, drawTick, setUser, restoreSession, generation, logout, syncAccount, seedFavoriteEpisodes, ackFavoriteEpisodes, setCollected, setLiked, setFollowing, addHistory, clearHistory, localToggle]);
+  }), [rev, drawTick, setUser, restoreSession, generation, logout, syncAccount, seedFavoriteEpisodes, ackFavoriteEpisodes, setCollected, setLiked, setFollowing, addHistory, clearHistory, removeHistory, localToggle]);
 }
