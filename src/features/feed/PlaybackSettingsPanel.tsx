@@ -1,25 +1,16 @@
 import { Button, SegmentedControl, Surface } from "../../shared/ui/ios/controls";
 import { Toggle } from "../../shared/ui/ui";
-import {
-  IBoltF, IChevR, IClock, IClose, IExpand, IEyeOff, ILockF, IVertSwap, IVolMute,
-} from "../../shared/ui/icons";
+import { IBoltF, IClock, IClose, IExpand } from "../../shared/ui/icons";
 
 const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-export function PlaybackSettingsPanel({ rate, onRate, preferHevc, onPreferHevc, portraitFit, onPortraitFit,
-  swipeEp, onSwipeEp, muted, onMuted, onLock, onNotInterested, onClose }: {
+export function PlaybackSettingsPanel({ rate, onRate, preferHevc, onPreferHevc, portraitFit, onPortraitFit, onClose }: {
   rate: number;
   onRate: (rate: number) => void;
   preferHevc: boolean;
   onPreferHevc: (on: boolean) => void;
   portraitFit: "contain" | "cover";
   onPortraitFit: (fit: "contain" | "cover") => void;
-  swipeEp: boolean;
-  onSwipeEp: (on: boolean) => void;
-  muted: boolean;
-  onMuted: (on: boolean) => void;
-  onLock: () => void;
-  onNotInterested: () => void;
   onClose: () => void;
 }) {
   return <div className="playback-settings-sheet">
@@ -58,40 +49,6 @@ export function PlaybackSettingsPanel({ rate, onRate, preferHevc, onPreferHevc, 
             {RATES.map(value => <Button key={value} aria-pressed={rate === value} aria-label={`倍速 ${value} 倍`} onClick={() => onRate(value)}>{value}×</Button>)}
           </SegmentedControl>
         </div>
-        <div className="ios-settings-row playback-setting-row">
-          <span className="ios-setting-icon"><IVertSwap size={16} /></span>
-          <div className="flex-1 min-w-0">
-            <div className="text-[14px] text-on">上下划切集</div>
-            <div className="text-[12px] text-mut">开启后，上下滑动切换当前剧集</div>
-          </div>
-          <Toggle desktop on={swipeEp} onChange={onSwipeEp} label="上下划切集" />
-        </div>
-        <div className="ios-settings-row playback-setting-row">
-          <span className="ios-setting-icon"><IVolMute size={16} /></span>
-          <div className="flex-1 min-w-0">
-            <div className="text-[14px] text-on">静音</div>
-            <div className="text-[12px] text-mut">关闭当前视频的声音</div>
-          </div>
-          <Toggle desktop on={muted} onChange={onMuted} label="静音" />
-        </div>
-      </Surface>
-      <Surface className="ios-setting-group playback-settings-group playback-settings-actions">
-        <Button className="ios-settings-row playback-setting-row playback-setting-action" onClick={onLock}>
-          <span className="ios-setting-icon"><ILockF size={16} /></span>
-          <div className="flex-1 min-w-0">
-            <div className="text-[14px] text-on">屏幕锁定</div>
-            <div className="text-[12px] text-mut">隐藏屏幕操作按钮，避免误触</div>
-          </div>
-          <IChevR size={15} className="text-mut" />
-        </Button>
-        <Button className="ios-settings-row playback-setting-row playback-setting-action" onClick={onNotInterested}>
-          <span className="ios-setting-icon"><IEyeOff size={16} /></span>
-          <div className="flex-1 min-w-0">
-            <div className="text-[14px] text-on">不感兴趣</div>
-            <div className="text-[12px] text-mut">选择并屏蔽当前视频的标签</div>
-          </div>
-          <IChevR size={15} className="text-mut" />
-        </Button>
       </Surface>
     </div>
   </div>;

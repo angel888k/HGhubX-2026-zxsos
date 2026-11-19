@@ -100,11 +100,11 @@ function GuideContent({ target, bottomInset, onClose }: Omit<Props, "open">) {
       </div>
       <div className="mobile-hold-guide-zone is-menu" data-hold-guide-menu style={{ ...point(.5, .5), width: bounds.size, height: bounds.size }}>
         <span className="mobile-hold-guide-dot" aria-hidden="true" />
-        <strong>不感兴趣</strong><span>只在此处长按</span>
+        <strong>锁定控件</strong><span>只在此处长按</span>
       </div>
     </>}
     <div className="mobile-hold-guide-footer">
-      <p>长按加速 · 左右滑换挡 · 移入顶部标签锁定</p>
+      <p>长按加速 · 左右滑换挡 · 长按中心锁定控件</p>
       <p>双击暂停播放</p>
       <Button className="mobile-hold-guide-done" onClick={onClose} data-autofocus>知道了</Button>
     </div>

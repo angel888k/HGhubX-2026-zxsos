@@ -35,7 +35,6 @@ function Probe() {
   const [muted, setMuted] = useState(true);
   const [openedTag, setOpenedTag] = useState("");
   const [fullscreen, setFullscreen] = useState<boolean | null>(null);
-  const [locked, setLocked] = useState(false);
   const openTagMenu = (selected: string[] = []) => {
     setTagSelection(selected);
     setPanel(null);
@@ -52,7 +51,6 @@ function Probe() {
         muted: () => muted,
         openedTag: () => openedTag,
         fullscreen: () => fullscreen,
-        locked: () => locked,
         tagSelection: () => tagSelection,
       },
     });
@@ -75,15 +73,13 @@ function Probe() {
     />
     <FeedMobileTopTools
       isDesktop={false} controlsLocked={false} active fs={false} idle={false} rotated={false} clean={false}
-      currentQuality={preferHevc ? "HD" : "SD"} lockControls={() => setLocked(true)}
+      currentQuality={preferHevc ? "HD" : "SD"} muted={muted} onToggleMuted={() => setMuted(value => !value)}
+      swipeEnabled swipeEp={swipeEp} onToggleSwipe={() => setSwipeEp(value => !value)}
     />
     <Sheet open={panel === "more"} label="播放设置" z="playback-settings-overlay" onClose={() => setPanel(null)}>
       <PlaybackSettingsPanel
         rate={rate} onRate={setRate} preferHevc={preferHevc} onPreferHevc={setPreferHevc}
-        portraitFit={portraitFit} onPortraitFit={setPortraitFit}
-        swipeEp={swipeEp} onSwipeEp={setSwipeEp} muted={muted} onMuted={setMuted}
-        onLock={() => { setLocked(true); setPanel(null); }}
-        onNotInterested={() => openTagMenu()} onClose={() => setPanel(null)}
+        portraitFit={portraitFit} onPortraitFit={setPortraitFit} onClose={() => setPanel(null)}
       />
     </Sheet>
     <TagBlockMenu open={tagMenu} tags={meta.tags} initialSelected={tagSelection} onClose={() => setTagMenu(false)} />

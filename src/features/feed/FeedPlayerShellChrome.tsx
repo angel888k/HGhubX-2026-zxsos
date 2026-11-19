@@ -10,7 +10,7 @@ import type { FeedMeta } from "./useFeedActions";
 import type { FeedPanel } from "./useFeedViewport";
 import { PlaybackSettingsPanel } from "./PlaybackSettingsPanel";
 import {
-  IBoltF, IClose, ICompress, ILockF, IPauseF, IPlayF, IVertSwap,
+  IBoltF, IClose, ICompress, IPauseF, IPlayF, IVertSwap, IVol, IVolMute,
 } from "../../shared/ui/icons";
 
 const VideoDetailsPanel = lazy(() => import("./VideoDetailsPanel"));
@@ -88,7 +88,6 @@ type Props = {
   exitFs: () => void;
   onFollow: () => Promise<void>;
   openTag: (tag: string) => void;
-  openTagMenu: (selected?: string[]) => void;
   closePanels: () => void;
   pushPage: (page: PageInput) => void;
   toast: (msg: string, icon?: Toast["icon"]) => void;
@@ -103,7 +102,7 @@ export function FeedPlayerShellChrome({
   follows, followPending, post, articleHtml, panel, setPanel,
   scrub, barPct, onBarDown, onBarMove, onBarUp,
   pickEp, go, togglePip, lockControls, toggleFull, exitFs,
-  onFollow, openTag, openTagMenu, closePanels, pushPage, toast,
+  onFollow, openTag, closePanels, pushPage, toast,
 }: Omit<Props, "clean">) {
   const liveMeta = { ...meta, like: likeCount, collect: collectCount };
   const landscapeStage = rotated || vpLandscape;
@@ -115,7 +114,7 @@ export function FeedPlayerShellChrome({
   const detailBody = (onClose?: () => void) => (
     <VideoDetailsPanel meta={liveMeta} videoId={curId} episodeCount={episodes.length}
       related={related} following={follows.includes(meta.authorId)} followPending={followPending}
-      onFollow={() => void onFollow()} onTag={openTag} onClose={onClose} onPreferences={() => openTagMenu()}
+      onFollow={() => void onFollow()} onTag={openTag} onClose={onClose}
       onAuthor={() => { if (meta.authorId > 0) { closePanels(); pushPage({ kind: "user", id: meta.authorId, name: meta.author }); } }}
       onRelated={(video, visible) => { closePanels(); pushPage({ kind: "feed", videoIds: visible.map(item => item.id), index: visible.findIndex(item => item.id === video.id), title: "相关推荐" }); }} />
   );
@@ -281,10 +280,6 @@ export function FeedPlayerShellChrome({
               rate={rate} onRate={(value) => { setRate(value); videoRef.current?.rate(value); }}
               preferHevc={preferHevc} onPreferHevc={setPreferHevc}
               portraitFit={portraitFit} onPortraitFit={setPortraitFit}
-              swipeEp={swipeEp} onSwipeEp={setSwipeEp}
-              muted={muted} onMuted={setMuted}
-              onLock={() => { setPanel(null); lockControls(); }}
-              onNotInterested={() => openTagMenu()}
               onClose={() => setPanel(null)} />
           </Sheet>
 
@@ -341,7 +336,8 @@ export function FeedPlayerShellChrome({
 }
 
 export function FeedMobileTopTools({
-  isDesktop, controlsLocked, active, fs, idle, rotated, clean, currentQuality, lockControls,
+  isDesktop, controlsLocked, active, fs, idle, rotated, clean, currentQuality,
+  muted, onToggleMuted, swipeEnabled, swipeEp, onToggleSwipe,
 }: {
   isDesktop: boolean;
   controlsLocked: boolean;
@@ -351,18 +347,31 @@ export function FeedMobileTopTools({
   rotated: boolean;
   clean: boolean;
   currentQuality: "HD" | "SD" | null;
-  lockControls: () => void;
+  muted: boolean;
+  onToggleMuted: () => void;
+  swipeEnabled: boolean;
+  swipeEp: boolean;
+  onToggleSwipe: () => void;
 }) {
-  if (isDesktop || controlsLocked || !active || (fs && idle) || (!fs && (clean || !currentQuality))) return null;
+  if (isDesktop || controlsLocked || !active || (fs && idle) || (!fs && clean)) return null;
+  const chip = fs ? "w-11 h-11" : "w-9 h-9";
   return (
     <div className="feed-mobile-top-tools absolute z-40 flex items-center gap-2"
       style={{
         top: rotated ? 12 : "calc(var(--sat, 0px) + 6px)",
         right: fs ? (rotated ? "calc(var(--sab, 0px) + 68px)" : "calc(var(--sar, 0px) + 68px)") : "calc(var(--sar, 0px) + 12px)",
       }}>
-      {!clean && currentQuality && <span className="feed-current-quality" aria-label={`当前清晰度：${currentQuality === "HD" ? "高清" : "标清"}`}>{currentQuality}</span>}
-      {fs && <Button onClick={lockControls} aria-label="屏幕锁定" title="屏幕锁定"
-        className="hg-chip w-11 h-11 rounded-full flex items-center justify-center pressable elev-1"><ILockF size={17} /></Button>}
+      {!clean && <>
+        <Button onClick={onToggleMuted} aria-label={muted ? "取消静音" : "静音"} aria-pressed={muted}
+          className={`hg-chip ${chip} rounded-full flex items-center justify-center pressable elev-1`}>
+          {muted ? <IVolMute size={17} /> : <IVol size={17} />}
+        </Button>
+        {swipeEnabled && <Button onClick={onToggleSwipe} aria-label={swipeEp ? "关闭上下划切集" : "开启上下划切集"} aria-pressed={swipeEp}
+          className={`hg-chip ${chip} rounded-full flex items-center justify-center pressable elev-1 ${swipeEp ? "is-on" : ""}`}>
+          <IVertSwap size={17} />
+        </Button>}
+        {currentQuality && <span className="feed-current-quality" aria-label={`当前清晰度：${currentQuality === "HD" ? "高清" : "标清"}`}>{currentQuality}</span>}
+      </>}
     </div>
   );
 }

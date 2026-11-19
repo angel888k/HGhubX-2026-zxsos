@@ -37,11 +37,18 @@ try {
   assert.equal(await page.locator(".mobile-playback-episodes").innerText(), "选集 · 全109集");
   assert.equal(await page.locator(".feed-current-quality").innerText(), "HD");
   assert.equal(await page.getByRole("button", { name: "搜索", exact: true }).count(), 0);
+  assert.equal(await page.getByRole("button", { name: "视频详情", exact: true }).count(), 0);
   const portraitMore = await page.getByRole("button", { name: "更多播放设置" }).boundingBox();
   const portraitDock = await page.locator(".mobile-playback-dock").boundingBox();
   assert.ok(portraitMore && portraitDock && portraitMore.y + portraitMore.height < portraitDock.y);
   await page.screenshot({ path: path.join(output, "home-portrait.png") });
-  console.log("✓ portrait rail, real episode total, HD badge, and no top search");
+  console.log("✓ portrait rail, real episode total, HD badge, no top search, and one panel entry");
+
+  await page.getByRole("button", { name: "取消静音" }).click();
+  assert.equal(await probe("muted"), false);
+  await page.getByRole("button", { name: "关闭上下划切集" }).click();
+  assert.equal(await probe("swipeEp"), false);
+  console.log("✓ mute and episode-swipe toggles are primary one-tap controls");
 
   await page.locator(".mobile-playback-episodes").click();
   assert.equal(await probe("panel"), "episodes");
@@ -74,22 +81,11 @@ try {
   assert.equal(await probe("rate"), 1.5);
   await page.getByRole("button", { name: "铺满", exact: true }).click();
   assert.equal(await probe("portraitFit"), "cover");
-  await page.locator(".playback-setting-row").filter({ hasText: "上下划切集" }).getByRole("switch").click();
-  assert.equal(await probe("swipeEp"), false);
-  await page.locator(".playback-setting-row").filter({ hasText: "静音" }).getByRole("switch").click();
-  assert.equal(await probe("muted"), false);
-  await page.locator(".playback-setting-action").filter({ hasText: "屏幕锁定" }).click();
-  assert.equal(await probe("locked"), true);
-  await page.locator(".playback-settings-sheet").waitFor({ state: "detached" });
-  console.log("✓ quality, rate, fit, swipe, mute, and screen lock update real state");
-
-  await page.getByRole("button", { name: "更多播放设置" }).click();
-  await page.locator(".playback-setting-action").filter({ hasText: "不感兴趣" }).click();
-  await page.locator(".content-tag-menu").waitFor();
-  assert.deepEqual(await probe("tagSelection"), []);
-  assert.equal(await page.locator('.content-tag-option[data-selected="true"]').count(), 0);
-  await page.locator(".content-tag-menu-header button").click();
-  console.log("✓ the more-panel disinterest entry opens an empty tag selection");
+  assert.equal(await page.locator(".playback-settings-row").filter({ hasText: "上下划切集" }).count(), 0);
+  assert.equal(await page.locator(".playback-settings-row").filter({ hasText: "静音" }).count(), 0);
+  assert.equal(await page.locator(".playback-setting-action").count(), 0);
+  await page.getByRole("button", { name: "关闭播放设置" }).click();
+  console.log("✓ quality, rate, and fit remain in settings; primary actions are no longer duplicated there");
 
   await page.setViewportSize({ width: 844, height: 390 });
   await page.waitForTimeout(150);

@@ -274,19 +274,11 @@ export default function FeedItemChrome({
                 {!!meta.author && <div className="mobile-video-author">@{meta.author}</div>}
                 <p className="text-[15px] font-semibold leading-snug hg-ink-2 hg-ov-shadow-strong clamp-2">{meta.title}</p>
                 <CurrentVideoTags tags={meta.tags} onOpen={openTag} onBlock={tag => openTagMenu([tag])} />
+                {meta.tags.length > 0 && <div className="current-video-tags-hint">点按查看同类 · 长按屏蔽</div>}
               </div>
             </div>
           )}
           <div className="relative pt-1.5 pb-2.5">
-            {!clean && (
-              <div className={`mobile-video-meta-copy flex flex-wrap items-center gap-2 transition-opacity duration-150 ${scrubbing ? "opacity-35" : ""}`}>
-                <Button aria-label="视频详情" onClick={() => setPanel("detail")}
-                  className="min-h-11 flex items-center gap-0.5 text-[12px] font-medium hg-ink-3 hg-ov-shadow-strong pressable pointer-events-auto">
-                  {kind === "post" ? "图文详情" : `详情 · 第 ${curEp} 集`}<IChevR size={11} />
-                </Button>
-                {meta.tags.length > 0 && <span className="current-video-tags-hint">长按标签可屏蔽</span>}
-              </div>
-            )}
             {isActive && <div ref={barRef} data-seek-bar data-scrubbing={scrubbing || undefined}
               className="-mt-0.5 -mb-2.5 relative pointer-events-auto"
               style={{
@@ -328,8 +320,10 @@ export default function FeedItemChrome({
               )}
             </div>}
             {!clean && <div className="mobile-playback-dock">
-              {kind === "video" && <Button aria-label={episodes.length ? `选集，共 ${episodes.length} 集` : "选集"} onClick={() => setPanel("episodes")} className="mobile-playback-episodes">
+              {kind === "video" ? <Button aria-label={episodes.length ? `选集，共 ${episodes.length} 集` : "选集"} onClick={() => setPanel("episodes")} className="mobile-playback-episodes">
                 <IList size={18} /><span>选集{episodes.length > 0 ? ` · 全${episodes.length}集` : ""}</span><IChevronUp size={16} />
+              </Button> : <Button aria-label="图文详情" onClick={() => setPanel("detail")} className="mobile-playback-episodes">
+                <IFileText size={18} /><span>图文详情</span><IChevronUp size={16} />
               </Button>}
               <Button aria-label="全屏" onClick={() => enterFs(landscapeVideo)} className="mobile-playback-fullscreen"><IExpand size={19} /></Button>
             </div>}
