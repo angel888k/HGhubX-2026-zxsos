@@ -22,6 +22,8 @@ Feed 负责列表播放页的条目位置、详情/帖子读取、标签门、�
 - [`src/features/feed/Panels.tsx`](../../src/features/feed/Panels.tsx) 的
   `CommentsPanel`、`EpisodesPanel`、`ArticlePanel`；
   [`src/features/feed/VideoDetailsPanel.tsx`](../../src/features/feed/VideoDetailsPanel.tsx)。
+- [`src/features/posts/Posts.tsx`](../../src/features/posts/Posts.tsx) 的 `PostDetail`：
+  吃瓜详情的正文/播放数据 effect 与线路事件下的后台刷新。
 - [`src/shared/model/store.tsx`](../../src/shared/model/store.tsx) 的 `lineEpoch` 和 `accountScope` 传递；
   [`src/shared/model/accountData.ts`](../../src/shared/model/accountData.ts) 的 `generation`；
   [`src/shared/model/contentPreferences.ts`](../../src/shared/model/contentPreferences.ts) 的 `blockReason`。
@@ -96,6 +98,15 @@ Feed 负责列表播放页的条目位置、详情/帖子读取、标签门、�
 - 标准版「我的 → 收藏 → 短剧」重新激活时，按已展现的列表范围后台刷新详情，每批最多 6 部。
   展开更多时读取新增条目；同一激活期间已刷新的条目不重复请求。旧卡片与观看断点保留，
   刷新失败不将旧集数当空数据，离开页面或切线后丢弃在途结果。
+- 吃瓜详情（[`src/features/posts/Posts.tsx`](../../src/features/posts/Posts.tsx) 的
+  `PostDetail`）区分「换帖子/账号」与「仅线路代次变化」：`hg:line-changed`/`hg:proxy-changed`
+  （自动选线切换、保存代理）推进 `lineEpoch` 时，只有 `id`/`accountScope` 变化才清空重置；
+  仅 `lineEpoch` 变化保留已显示的 `post`、正文与滚动位置，后台重拉 `api_post` 与
+  `api_post_playback`，播放地址解析失败保留旧地址不清空。否则整页回加载态会卸载播放器
+  portal，视频从 0 重播（issue #165）。
+- 吃瓜详情的正文仅在正文内容或安全模式改变时重新清洗。渲染时复用同一个
+  `dangerouslySetInnerHTML` 属性对象；滚动更新「阅读进度」以及刷新得到同一正文时不替换
+  图片节点，避免懒加载图片反复消失、重载和撑开布局（issue #165）。
 - 上下划切集的提示 toast 带 `tag="episode"`（`useFeedTouchGestures.ts`）；`store.tsx` 的
   `pushToastItem` 对同 tag 原地替换内容并重置 2200ms 计时，快速连续划集只显示一张最新卡片，
   不堆叠、不重放入场动画；无 tag 的 toast 仍按原逻辑堆叠（最多 3 张）。
@@ -106,9 +117,13 @@ Feed 负责列表播放页的条目位置、详情/帖子读取、标签门、�
 pnpm build
 pnpm test:smoke
 pnpm test:api-loading
+pnpm test:post-flicker
 cargo test --manifest-path src-tauri/Cargo.toml --lib
 ```
 
 `test:smoke` 当前包含 `api-loading`、`storage-migration`、`line-selection`、
 `diagnostic-copy`。浏览器 fixture 使用 mock Tauri IPC 且阻断外部请求，
 不能证明真实上游的正文结构或账号接口；真实接口变化需要另加网络隔离的 fixture 或手动验证。
+`test:post-flicker` 是吃瓜详情线路/代理事件的回归（issue #165）：浏览器 fixture，
+mock IPC，本地 ffmpeg HLS 分片，不访问上游；需要 ffmpeg，归入播放诊断
+（`pnpm test:playback --scenarios post-flicker`，CI 的 core 分片），不进 smoke。

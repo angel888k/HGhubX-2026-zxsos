@@ -14,8 +14,9 @@ import { createServer as createViteServer } from "vite";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const scriptScenarios = {
   tv: { script: "test-tv-remote.mjs", timeout: 480000, metrics: { transport: "mock Tauri IPC; actual TV bootstrap, worker, library and player" } },
+  "post-flicker": { script: "test-post-flicker.mjs", timeout: 240000, metrics: { transport: "mock Tauri IPC; real PostDetail/AppProvider/Player; local HLS fixture" } },
 };
-const ALL_SCENARIOS = ["seek", "legacy", "lifecycle", "gesture", "proxy", "portrait-fit", "ios-native", "recovery", "review", "tv"];
+const ALL_SCENARIOS = ["seek", "legacy", "lifecycle", "gesture", "proxy", "portrait-fit", "ios-native", "recovery", "review", "tv", "post-flicker"];
 const { values: args } = parseArgs({ options: {
   "media-dir": { type: "string" }, output: { type: "string" }, "browser-executable": { type: "string" },
   scenarios: { type: "string", default: "seek,legacy,lifecycle,gesture,proxy,portrait-fit" }, help: { type: "boolean" },
@@ -591,7 +592,7 @@ async function explicitRecoveryCheck(page) {
 }
 
 try {
-  if (scenarios.some(name => name !== "ios-native" && name !== "tv" && name !== "review")) {
+  if (scenarios.some(name => name !== "ios-native" && name !== "tv" && name !== "review" && name !== "post-flicker")) {
     let mediaDir = args["media-dir"] && resolve(args["media-dir"]);
     if (!mediaDir) {
       temporaryMedia = await mkdtemp(join(tmpdir(), "hghubx-playback-")); mediaDir = temporaryMedia;
@@ -610,16 +611,16 @@ try {
   }
   for (const name of scenarios) {
     const dir = join(output, name); await mkdir(dir);
-    if (name === "tv") {
+    if (scriptScenarios[name]) {
       const result = { name, status: "running", started: new Date().toISOString() }; report.cases.push(result);
       let stdout = "", stderr = "";
       try {
-        const child = await promisify(execFile)(process.execPath, [join(root, "scripts", scriptScenarios.tv.script)], {
-          cwd: root, encoding: "utf8", timeout: scriptScenarios.tv.timeout, maxBuffer: 8 * 1024 * 1024,
+        const child = await promisify(execFile)(process.execPath, [join(root, "scripts", scriptScenarios[name].script)], {
+          cwd: root, encoding: "utf8", timeout: scriptScenarios[name].timeout, maxBuffer: 8 * 1024 * 1024,
           env: { ...process.env, ...(args["browser-executable"] ? { BROWSER_EXECUTABLE: args["browser-executable"] } : {}) },
         });
         stdout = child.stdout; stderr = child.stderr;
-        result.metrics = { exit_code: 0, ...scriptScenarios.tv.metrics };
+        result.metrics = { exit_code: 0, ...scriptScenarios[name].metrics };
         result.status = "passed"; console.log(`PASS ${name}: ${JSON.stringify(result.metrics)}`);
       } catch (error) {
         stdout = error.stdout || ""; stderr = error.stderr || "";
