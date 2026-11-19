@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Feed } from "../src/features/feed";
 import { AppProvider } from "../src/shared/model/store";
 import { api } from "../src/shared/api/api";
+import { ToastHost } from "../src/shared/ui/ui";
 import "../src/index.css";
 import { flushPlaybackLog, initPlaybackLog, playbackLogApi, setPlaybackLog } from "../src/shared/diagnostics/playbackDiagnostics";
 import Settings from "../src/features/settings/Settings";
@@ -126,6 +127,7 @@ function Fixture() {
     <button onClick={() => setActive((v) => !v)}>切换播放页激活状态</button>
     {diagnosticTest && <button onClick={() => setSettings(v => !v)}>诊断设置</button>}
     {settings && <div style={{ position: "relative", width: 900, height: 700 }}><Settings onBack={() => setSettings(false)} wide /></div>}
+    {swipeEpTest && <ToastHost />}
   </AppProvider>;
 }
 createRoot(document.querySelector("#root")!).render(<Fixture />);
