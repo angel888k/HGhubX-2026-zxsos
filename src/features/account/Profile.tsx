@@ -34,8 +34,6 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
   const postCacheRef = useRef(postCache);
   postCacheRef.current = postCache;
   const [limits, setLimits] = useState({ favVideo: 12, favPost: 12, history: 12 });
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const sentinelRef = useRef<HTMLDivElement>(null);
   const [failedIds, setFailedIds] = useState<number[]>([]);
   const [reload, setReload] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -64,7 +62,6 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
   const limitKey = tab === "history" ? "history" : showingPosts ? "favPost" : "favVideo";
   const ids = tab === "history" ? history.map((h) => h.id) : showingPosts ? postFavs : favs;
   const visibleIds = ids.slice(0, limits[limitKey]);
-  const hasMore = visibleIds.length < ids.length;
   const videoCards = !showingPosts ? visibleIds.map(id => videoCache[id]).filter((card): card is Detail => !!card) : [];
   const postCards = showingPosts ? visibleIds.map(id => postCache[id]).filter((card): card is Post => !!card) : [];
   const cardsCount = showingPosts ? postCards.length : videoCards.length;
@@ -147,19 +144,6 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
     return () => { alive = false; };
   }, [active, idsKey, tab, showingPosts, reload]);
 
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    const scroller = scrollRef.current;
-    if (!active || !hasMore || loading || !sentinel || !scroller) return;
-    const observer = new IntersectionObserver(entries => {
-      if (!entries[0]?.isIntersecting) return;
-      observer.disconnect();
-      setLimits(previous => ({ ...previous, [limitKey]: previous[limitKey] + 12 }));
-    }, { root: scroller, rootMargin: "300px 0px" });
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [active, hasMore, limitKey, loading, visibleIds.length]);
-
   const confirmLogout = async () => {
     if (logoutPending.current) return;
     logoutPending.current = true;
@@ -241,7 +225,7 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
         )}
       </div>
 
-      <div ref={scrollRef} className="ios-page-body flex-1 scroll-y pt-2 pb-24">
+      <div className="ios-page-body flex-1 scroll-y pt-2 pb-24">
         {/* 资料卡：已登录 / 未登录（点开登录抽屉） */}
         {user ? (
           <Surface className="ios-account-card flex items-center gap-3.5 a-rise">
@@ -333,7 +317,7 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
           ) : loading && !cardsCount ? (
             <div className="flex justify-center py-8"><Loader className="w-7 h-7 spinner" /></div>
           ) : showingPosts && postCards.length ? (
-            <div className={`ios-media-grid is-profile ${wide ? "is-wide" : ""}`}>
+            <div className={`ios-media-grid ${wide ? "is-wide" : ""}`}>
               {postCards.map((p) => {
                 const reason = blockReason(p.tags);
                 return <MediaCard key={p.id} blockedReason={reason} title={p.title} cover={p.cover}
@@ -347,7 +331,7 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
               })}
             </div>
           ) : !showingPosts && videoCards.length ? (
-            <div className={`ios-media-grid is-profile ${wide ? "is-wide" : ""}`}>
+            <div className={`ios-media-grid ${wide ? "is-wide" : ""}`}>
               {videoCards.map((c) => {
                 const progress = progressOf(c.id);
                 const reason = blockReason(c.tags);
@@ -405,7 +389,8 @@ function ProfileContent({ wide, active }: { wide: boolean; active: boolean }) {
           </div>}
           {cardsCount > 0 && loading && <div className="flex justify-center py-3"><Loader label="加载更多内容" /></div>}
           {ids.length > 0 && <p role="status" className="mt-3 text-[12px] text-mut">已显示 {cardsCount} / {ids.length} 项{user ? "账号记录" : "本机记录"}</p>}
-          {hasMore && <div ref={sentinelRef} className="h-4" aria-hidden="true" />}
+          {visibleIds.length < ids.length && <Button disabled={loading} onClick={() => setLimits(previous => ({ ...previous, [limitKey]: previous[limitKey] + 12 }))}
+            className="mt-3 w-full rounded-(--r-ctl) bg-s3 text-[13px] text-on">加载更多</Button>}
           {tab === "history" && history.length > 0 && (
             <Button disabled={clearBusy} aria-busy={clearBusy} onClick={() => { setClearError(""); setClearOpen(true); }} className="mt-3 w-full h-9 rounded-(--r-ctl) bg-s3 text-[13px] text-mut pressable">{clearBusy ? "正在清空…" : "清空观看历史"}</Button>
           )}
@@ -497,7 +482,7 @@ function FavoriteSyncState({ wide }: { wide: boolean }) {
       <span aria-hidden="true" className="ios-loader spinner w-5 h-5" />
       <span>正在同步收藏…</span>
     </div>
-    <div aria-hidden="true" className={`ios-media-grid is-profile ${wide ? "is-wide" : ""}`}>
+    <div aria-hidden="true" className={`ios-media-grid ${wide ? "is-wide" : ""}`}>
       {[0, 1, 2, 3].map(index => (
         <div key={index} className="min-w-0">
           <div className="aspect-[3/4] w-full rounded-[22px] bg-s3 animate-pulse" />
