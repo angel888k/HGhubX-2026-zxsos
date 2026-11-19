@@ -62,6 +62,13 @@ html.theme-light {
 .ios-form.flex:not(.ios-auth-form):focus-within { border-color:var(--p-primary); box-shadow:0 0 0 3px var(--p-tint); }
 .ios-form.flex>.ios-button { min-width:36px; flex-shrink:0; }
 .ios-range { accent-color:var(--p-primary); }
+/* 播放器进度滑杆：唯一一套自绘轨道（白色已播段 + 白色拇指），不随主题变深。 */
+input[type="range"].ios-range { -webkit-appearance:none; appearance:none; height:20px; background:transparent; cursor:pointer; }
+input[type="range"].ios-range::-webkit-slider-runnable-track { height:4px; border-radius:99px; background:linear-gradient(to right, #fff var(--fill,0%), rgb(255 255 255 / .22) var(--fill,0%)); }
+input[type="range"].ios-range::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; margin-top:-5px; border-radius:99px; background:#fff; box-shadow:0 1px 4px rgb(0 0 0 / .55); }
+input[type="range"].ios-range::-moz-range-track { height:4px; border-radius:99px; background:rgb(255 255 255 / .22); }
+input[type="range"].ios-range::-moz-range-progress { height:4px; border-radius:99px; background:#fff; }
+input[type="range"].ios-range::-moz-range-thumb { width:14px; height:14px; border:0; border-radius:99px; background:#fff; box-shadow:0 1px 4px rgb(0 0 0 / .55); }
 .ios-surface { background:var(--p-s1); border-radius:var(--r-md); box-shadow:0 2px 8px rgb(0 0 0 / .025); }
 .ios-segmented { position:relative; display:flex; gap:4px; padding:4px; min-width:0; border:1px solid var(--ios-edge); border-radius:var(--control-radius); background:var(--p-s3); }
 .ios-segmented-items { position:relative; z-index:1; display:grid; grid-template-columns:repeat(var(--segment-count,2),minmax(0,1fr)); flex:1; gap:4px; min-width:0; }
@@ -126,6 +133,7 @@ html.theme-light {
 .ios-subpage-header { background:var(--p-s1); border-bottom:1px solid var(--ios-edge); }
 .ios-subpage-bar { display:flex; align-items:center; gap:10px; min-height:56px; padding-block:8px; }
 .ios-nav-btn.ios-button { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; min-width:40px; min-height:40px; padding:0; flex-shrink:0; border-radius:50%; color:var(--p-on); background:transparent; }
+.win-nav-symbol { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; flex-shrink:0; }
 /* Titles and scrollers share one column. Phones fill the viewport; the
    padding, not the page width, absorbs asymmetric system insets. */
 .ios-page { container-type:inline-size; background:var(--p-bg); }
@@ -178,11 +186,9 @@ html.theme-light {
 }
 .ios-overlay-backdrop.ios-button { position:absolute; inset:0; width:100%; height:100%; background:var(--ios-scrim); border:0; min-height:0; border-radius:0; box-shadow:none; cursor:default;  }
 .ios-dialog { position:relative; display:flex; flex-direction:column; min-width:0; width:100%; max-width:var(--ios-dialog-width,440px); max-height:100%; border-radius:32px; background:var(--ios-glass); color:var(--p-on); border:1px solid var(--ios-edge); box-shadow:var(--ios-shadow),0 24px 80px rgb(0 0 0 / .15); backdrop-filter:blur(32px) saturate(150%); -webkit-backdrop-filter:blur(32px) saturate(150%); overflow:auto; overscroll-behavior:contain; }
-.ios-overlay.is-open .ios-dialog { animation:ios-dialog-in .24s cubic-bezier(.2,.8,.2,1) both; }
 .ios-overlay.is-closing { pointer-events:none; opacity:0; transition:opacity .18s; }
 .ios-overlay-sheet { align-items:flex-end; --overlay-gap:10px; }
 .ios-overlay-sheet .ios-dialog { max-width:640px; padding-bottom:12px; }
-.ios-overlay-sheet.is-open .ios-dialog { animation:ios-sheet-in .28s cubic-bezier(.2,.8,.2,1) both; }
 .ios-sheet-grip { width:36px; height:5px; border-radius:4px; background:var(--p-dim); opacity:.5; margin:12px auto 6px; flex-shrink:0; }
 .ios-auth { padding:28px; }
 .ios-dialog-heading { display:flex; gap:12px; align-items:center; }
@@ -205,36 +211,39 @@ html.theme-light {
 .ios-mobile-nav-items { position:relative; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); height:100%; }
 .ios-mobile-nav .ios-mobile-nav-item { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--p-mut); border-radius:999px; min-width:0; font-size:11px; font-weight:600; background:transparent; }
 .ios-mobile-nav .ios-mobile-nav-item[aria-current=page] { color:var(--p-primary); }
-.win-titlebar { height:44px; background:var(--p-canvas); }
-.win-wordmark { font-size:14px; letter-spacing:-.3px; }
-.win-sidebar { width:224px; background:var(--p-canvas); }
-.win-sidebar.is-compact { width:80px; }
-.win-sidebar-inner { padding:10px 12px 14px; gap:14px; }
-.win-nav-symbol { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; flex-shrink:0; }
-.win-search-launch { min-height:46px; border-radius:999px; background:var(--ios-glass); border:1px solid var(--ios-edge); font-size:14px; backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
-.win-nav-items { gap:5px; }
-.win-nav-item { min-height:46px; border-radius:999px; font-size:15px; color:var(--p-mut); }
-.win-nav-item.is-selected { background:var(--p-s1); color:var(--p-primary); box-shadow:0 2px 8px rgb(0 0 0 / .04); }
-.win-nav-item.is-selected::before { display:none; }
-.win-nav-key { font-size:11px; background:transparent; }
-.win-account { min-height:68px; border-radius:22px; background:var(--p-s1); }
-.win-account-copy strong { font-size:14px; }
-.win-account-copy small { font-size:12px; }
-.win-sidebar-version { font-size:11px; line-height:1.6; }
-:is(.plat-windows,.plat-linux,.plat-macos) .win-main { border-radius:24px; box-shadow:0 2px 10px rgb(0 0 0 / .025); }
-.desktop-context-header>.ios-button { width:44px; height:44px; background:rgb(50 50 55 / .55); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid rgb(255 255 255 / .16); }
-.desktop-control-row { min-height:44px; height:auto; gap:6px; }
-.player-control.ios-button { min-height:36px; min-width:36px; border-radius:999px; }
-.player-timecode { font-size:12px; }
-.player-speed { font-size:13px; }
-.player-speed-menu { background:rgb(40 40 44 / .9); border:1px solid rgb(255 255 255 / .16); border-radius:22px; backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px); }
-.player-speed-menu button { min-height:36px; font-size:13px; border-radius:999px; }
-.player-menu-title { font-size:12px; color:#c1c1c9; }
 .ios-empty { min-height:240px; }
-.ios-toast-host>div { background:var(--ios-glass); border:1px solid var(--ios-edge); border-radius:24px; box-shadow:var(--ios-shadow); backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px); }
-.pressable:active,.player-control:active { transform:none; }
-@keyframes ios-dialog-in { from{opacity:0;transform:translateY(12px) scale(.98)} to{opacity:1;transform:none} }
-@keyframes ios-sheet-in { from{transform:translateY(28px);opacity:0} to{transform:none;opacity:1} }
+.ios-toast-host>div { border:1px solid var(--ios-edge); border-radius:24px; }
+.player-control:active { transform:none; }
+/* 桌面沉浸播放器控件：唯一一套深色玻璃材质，与视频浮层芯片同源。 */
+.player-control.ios-button {
+  min-height:36px; min-width:36px; padding:0 8px; border-radius:999px;
+  display:inline-flex; align-items:center; justify-content:center; color:#c8ced8;
+}
+.player-control.ios-button:hover { background:rgb(255 255 255 / .09); color:#fff; }
+.player-control.ios-button:disabled { color:#5e6570; cursor:default; }
+.player-control.is-on { color:var(--motion-accent); }
+.player-control.primary-play { color:#fff; }
+.player-control.primary-play svg { fill:currentColor; }
+.player-timecode { display:inline-flex; gap:4px; align-items:baseline; font-size:12px; font-variant-numeric:tabular-nums; color:#d3dae4; margin-left:6px; }
+.player-time-separator { color:#6b7480; }
+.player-control-spacer { flex:1; }
+.player-resolution { font-size:10.5px; color:#8b93a0; padding:0 6px; }
+.player-speed-slot { position:relative; }
+.player-speed { font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; }
+.player-speed-menu {
+  position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%);
+  width:132px; padding:6px; border-radius:22px;
+  background:rgb(40 40 44 / .9); border:1px solid rgb(255 255 255 / .16); box-shadow:var(--ios-shadow);
+  backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px);
+  display:flex; flex-direction:column; gap:1px; animation:motion-dialog-in .18s ease both;
+}
+.player-menu-title { font-size:12px; color:#c1c1c9; padding:6px 8px 8px; }
+.player-speed-menu button {
+  display:flex; align-items:center; justify-content:space-between;
+  min-height:36px; padding:0 8px; border-radius:999px; font-size:13px; color:#c9d1dc;
+}
+.player-speed-menu button:hover { background:rgb(255 255 255 / .07); color:#fff; }
+.player-speed-menu button[aria-checked="true"] { color:var(--motion-accent); font-weight:600; }
 @media(pointer:coarse) {
   .ios-button:not([data-card]):not(.ios-overlay-backdrop):not(.win-caption-tool) { min-block-size:44px; min-inline-size:44px; }
   .ios-form.flex>.ios-button { min-width:44px; }
@@ -274,18 +283,10 @@ html.theme-light {
 }
 
 /* Responsive feedback starts on press; only transform/opacity animate. */
-.ios-button { transition:scale .3s var(--ios-spring),background-color .12s,color .12s,opacity .12s; }
-.ios-button:not(:disabled):not(.ios-overlay-backdrop):not(.ios-switch):active { scale:.965; transition-duration:55ms; }
 .ios-mobile-nav-item:not(:disabled):active { scale:.9; }
 .win-nav-item.is-selected { animation:ios-select .36s var(--ios-spring); }
-.ios-tab-active { animation:ios-tab-in .32s var(--ios-spring); }
-.a-page-in,.win-page-in { animation:ios-page-in .38s var(--ios-spring) both; }
-.ios-overlay.is-open .ios-dialog { animation:ios-dialog-in .32s var(--ios-spring) both; }
-.ios-overlay-sheet.is-open .ios-dialog { animation:ios-sheet-in .38s var(--ios-spring) both; }
 .ios-overlay.is-closing .ios-dialog { opacity:0; scale:.98; translate:0 8px; transition:opacity .15s,scale .15s,translate .15s; }
 @keyframes ios-select { from{scale:.96} to{scale:1} }
-@keyframes ios-tab-in { from{opacity:.65;translate:0 10px} to{opacity:1;translate:0 0} }
-@keyframes ios-page-in { from{opacity:.6;translate:24px 0} to{opacity:1;translate:0 0} }
 @media(prefers-reduced-motion:reduce) {
  .ios-button:not(:disabled):active { scale:1; }
  .ios-overlay.is-closing .ios-dialog { scale:1;translate:0 0; }
@@ -359,7 +360,7 @@ body { background:var(--motion-paper); }
 }
 .text-primary,.ios-rank-number.is-top,.ios-rank-metric { color:var(--p-accent); }
 .ios-rank-meter span { background:var(--p-accent); }
-.ios-button:not(:disabled):not(.ios-overlay-backdrop):not(.ios-switch):active { scale:.965; opacity:1; }
+.ios-button:not(:disabled):not(.ios-overlay-backdrop):not(.ios-switch):active { scale:.965; opacity:1; transition-duration:55ms; }
 .ios-button-primary,.brand-grad { background:var(--p-primary); color:var(--p-on-primary); box-shadow:var(--control-shadow); }
 .ios-icon-button:active { scale:.94; }
 
@@ -400,6 +401,9 @@ body { background:var(--motion-paper); }
 .a-page-in,.win-page-in { animation:motion-page-in .4s var(--motion-spring) both; }
 .ios-tab-active { animation:motion-tab-in .34s var(--motion-spring) both; }
 .a-toast { animation:motion-dialog-in .34s var(--motion-spring) both; }
+/* 点赞心跳：唯一保留的 pop 动效，弹簧曲线与 motion 代一致。 */
+@keyframes motion-pop { 0%{scale:1} 35%{scale:1.4} 60%{scale:.94} 100%{scale:1} }
+.a-pop { animation:motion-pop .42s var(--motion-spring) both; }
 
 @media(prefers-reduced-motion:reduce) {
   .ios-page-heading,.a-rise,.a-page-in,.win-page-in,.ios-tab-active,.a-toast,.ios-overlay.is-open .ios-dialog,.ios-overlay-sheet.is-open .ios-dialog,.ios-overlay.is-closing .ios-dialog { animation:none!important; }
@@ -583,18 +587,40 @@ html.theme-transitioning .ios-account-card { backdrop-filter:none; -webkit-backd
 .ios-mobile-nav[data-over-video=true] .ios-mobile-nav-item[aria-current=page] { color:var(--motion-on-ink); }
 .ios-mobile-nav[data-over-video=true] .hg-glass>.ios-mobile-nav-items>[aria-current=page] { color:var(--motion-on-ink); }
 
+/* ===================================================================
+   视频浮层控件：唯一一套「深色玻璃」材质（不随应用主题变亮）。
+   压在视频画面上的文字必须保持亮色；旧 hg-chip/hg-ink/hg-gold/hg-link
+   工具类已并入这里，组件只挂 ios-overlay-* 类。
+   =================================================================== */
+.ios-overlay-chip.ios-button { background:rgb(12 15 22 / .58); border:1px solid rgb(255 255 255 / .16); color:#fff; box-shadow:var(--ios-shadow); backdrop-filter:blur(14px) saturate(145%); -webkit-backdrop-filter:blur(14px) saturate(145%); }
+.ios-overlay-chip.ios-button:not(:disabled):hover { background:rgb(28 32 42 / .72); }
+.ios-overlay-pill { background:rgb(12 15 22 / .58); border:1px solid rgb(255 255 255 / .16); color:#fff; backdrop-filter:blur(14px) saturate(145%); -webkit-backdrop-filter:blur(14px) saturate(145%); }
+.ios-overlay-panel { background:rgb(10 13 18 / .82); border:1px solid rgb(255 255 255 / .15); color:#fff; box-shadow:var(--ios-shadow); backdrop-filter:blur(14px) saturate(145%); -webkit-backdrop-filter:blur(14px) saturate(145%); }
+.ios-overlay-ink { color:#fff; }
+.ios-overlay-ink-2 { color:rgb(255 255 255 / .92); }
+.ios-overlay-ink-3 { color:rgb(255 255 255 / .78); }
+.ios-overlay-ink-4 { color:rgb(255 255 255 / .6); }
+/* 浮层上的强调色固定为亮色，不用主题令牌（浅色主题下 --p-star/--p-accent 会变深）。 */
+.ios-overlay-star { color:#e8c078; }
+.ios-overlay-link.ios-button { color:#ff8577; }
+.ios-overlay-shadow { text-shadow:0 1px 8px rgb(0 0 0 / .7); }
+/* 没有压暗层时的文字保读：近处硬阴影 + 远处柔光，亮画面也不糊。 */
+.ios-overlay-shadow-strong { text-shadow:0 1px 3px rgb(0 0 0 / .92),0 2px 12px rgb(0 0 0 / .78); }
+
 /* Keep accessibility fallbacks last so the glass layer cannot override them. */
 @media(prefers-reduced-transparency:reduce),(prefers-contrast:more) {
   .ios-mobile-nav .hg-glass,.ios-dialog,.ios-toast-host>div,.win-search-launch,
   .ios-setting-group,.ios-account-card,.ios-rank-row,.ios-surface {
     background:var(--ios-glass-solid); backdrop-filter:none; -webkit-backdrop-filter:none;
   }
+  .ios-overlay-chip.ios-button,.ios-overlay-pill,.ios-overlay-panel { background:rgb(10 13 18 / .92); backdrop-filter:none; -webkit-backdrop-filter:none; }
   .ios-mobile-nav .hg-glass::before,.ios-dialog::before,.ios-toast-host>div::before,.win-search-launch::before,
   .ios-setting-group::before,.ios-account-card::before { display:none; }
 }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
   .ios-mobile-nav .hg-glass,.ios-dialog,.ios-toast-host>div,.win-search-launch,
   .ios-setting-group,.ios-account-card,.ios-rank-row,.ios-surface { background:var(--ios-glass-solid); }
+  .ios-overlay-chip.ios-button,.ios-overlay-pill,.ios-overlay-panel { background:rgb(10 13 18 / .92); }
 }
 @media(prefers-reduced-motion:reduce) {
   .ios-mobile-nav .hg-drop>.ios-liquid-fill::after,.ios-mobile-nav .ios-mobile-nav-item[aria-current=page] { animation:none!important; }

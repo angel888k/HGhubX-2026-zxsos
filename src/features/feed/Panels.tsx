@@ -193,7 +193,7 @@ export function CommentsPanel({ videoId, ep, total, kind = "video", onClose }: {
             placeholder={user ? "说点什么…" : "登录后参与评论"}
             className="flex-1 min-w-0 h-9 rounded-(--r-ctl) bg-s4 px-3.5 text-[14px] text-on placeholder-dim outline-none focus:bg-s3" />
           <Button type="submit" aria-label="发送评论" disabled={!text.trim() || sending}
-            className={`w-9 h-9 rounded-full flex items-center justify-center pressable ${text.trim() ? "brand-grad glow-neon" : "bg-s3 text-dim"}`}>
+            className={`w-9 h-9 rounded-full flex items-center justify-center pressable ${text.trim() ? "brand-grad" : "bg-s3 text-dim"}`}>
             {sending ? <Loader className="w-4 h-4 spinner" /> : <ISendF size={16} />}
           </Button>
         </Form>

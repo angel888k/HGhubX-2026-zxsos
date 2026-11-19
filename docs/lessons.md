@@ -34,6 +34,7 @@
 | 2026-11-19 | 吃瓜详情线路事件整页重置 | 自动选线切线/保存代理时吃瓜详情整页闪回加载态、视频从 0 重播（issue #165） | PostDetail 数据 effect 依赖 `lineEpoch` 且重跑即 `setPost(null)`，把「线路代次变化」当成「换帖子」处理 | 线路/代理事件只触发后台刷新，不得清空已显示内容；清空重置只属于 `id`/账号变化 | `scripts/test-post-flicker.mjs` |
 | 2026-11-19 | 吃瓜正文滚动闪烁（#165） | 未切线路时，滚动正文也会导致配图闪现和阅读进度跳动 | 阅读进度更新重渲染时创建新的 `dangerouslySetInnerHTML` 对象，React 重写相同 HTML，懒加载图片节点被替换 | 正文不变时复用 HTML 属性对象；回归断言滚动更新阅读进度后仍保留已加载的图片节点 | `scripts/test-post-flicker.mjs` |
 | 2026-11-19 | 本人主页显示关注 | 从「我的主页」进入后仍能看到「+ 关注」 | 共用创作者主页，渲染和操作前都未比对目标与当前账号 ID | 本人主页隐藏关注入口，处理操作前再次判断；保留其他创作者的关注入口 | `src/features/account/User.tsx` |
+| 2026-11-19 | 两代按钮/浮层风格并存 | 同一个返回键移动端是黑片、桌面是灰玻璃；收藏星两种金色；倍速菜单旧蓝灰选中色 | 四轮改版把新样式叠在 `@layer legacy` 之上，旧工具类（`hg-chip`/`hg-ink`/`hg-gold`/`elev-*` 等）未删，无层规则压过有层规则后旧定义部分失效部分漏出 | 控件外观只写 `src/styles/ios.css` 无层规则；视频浮层统一 `ios-overlay-*` 一套深色玻璃；`index.css` 只留布局与几何，同名控件不得双定义 | `src/styles/ios.css`、`docs/subsystems/platform-shells.md` |
 
 新回归的追加方式：
 

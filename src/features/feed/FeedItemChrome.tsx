@@ -87,7 +87,7 @@ export default function FeedItemChrome({
       {isActive && kind === "post" && !!post && !post.video_url && (
         <div className="absolute inset-0 z-10 flex items-center justify-center">
           <Button type="button" onClick={() => setPanel("article")}
-            className="flex items-center gap-2 h-11 px-5 rounded-full text-[14px] font-semibold pressable elev-3"
+            className="flex items-center gap-2 h-11 px-5 rounded-full text-[14px] font-semibold pressable"
             style={{ background: "rgba(255,255,255,.94)", color: "#0b0e15" }}>
             <IFileText size={17} />查看图文详情
           </Button>
@@ -104,13 +104,13 @@ export default function FeedItemChrome({
           </div>
         ) : (
           <div className="absolute inset-x-0 z-20 flex items-center gap-2 px-2.5 pointer-events-none" style={{ top: "calc(var(--sat, 0px) + 8px)", paddingRight: 164 }}>
-            <Button onClick={onBack} aria-label="返回" className="hg-chip w-9 h-9 rounded-full flex items-center justify-center pressable elev-1 pointer-events-auto"><IBack size={20} /></Button>
-            <span className="text-[15px] font-semibold hg-ink hg-ov-shadow truncate">{title}</span>
+            <Button onClick={onBack} aria-label="返回" className="ios-overlay-chip w-9 h-9 rounded-full flex items-center justify-center pressable pointer-events-auto"><IBack size={20} /></Button>
+            <span className="text-[15px] font-semibold ios-overlay-ink ios-overlay-shadow truncate">{title}</span>
           </div>
         )
       ) : null}
       {!fs && !clean && !isDesktop && mode === "context" && (
-        <span className="feed-position-pill absolute z-20 px-2.5 py-1 rounded-full hg-chip text-[12px] font-semibold tabular-nums"
+        <span className="feed-position-pill absolute z-20 px-2.5 py-1 rounded-full ios-overlay-pill text-[12px] font-semibold tabular-nums"
           style={{ top: "calc(var(--sat, 0px) + 52px)", left: 12, color: "rgba(255,255,255,.94)" }}>
           {index + 1} / {effectiveLength}
         </span>
@@ -139,8 +139,8 @@ export default function FeedItemChrome({
             transition: "opacity .38s cubic-bezier(.4,0,.2,1), transform .38s cubic-bezier(.4,0,.2,1)",
           }}>
           <div className={landscapeVideo
-            ? "inline-flex items-center gap-0.5 min-h-8 px-1 rounded-full backdrop-blur-xl elev-2 whitespace-nowrap"
-            : "flex flex-col items-stretch gap-1 p-1 rounded-[18px] backdrop-blur-xl elev-2"}
+            ? "inline-flex items-center gap-0.5 min-h-8 px-1 rounded-full backdrop-blur-xl whitespace-nowrap"
+            : "flex flex-col items-stretch gap-1 p-1 rounded-[18px] backdrop-blur-xl"}
             style={{ background: "rgba(12,15,22,.58)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.09)" }}>
             {landscapeVideo && (
               <>
@@ -174,20 +174,20 @@ export default function FeedItemChrome({
         <div className="mobile-video-action-rail absolute z-30 flex flex-col items-center gap-[10px]"
           style={{ right: "calc(var(--sar, 0px) + 12px)", bottom: `calc(var(--sab, 0px) + ${bottomInset}px + var(--mobile-action-rail-clearance, 108px))` }}>
           <Button onClick={() => void onLike()} disabled={likePending} aria-busy={likePending} className="mobile-action-like flex flex-col items-center gap-1 pressable" aria-pressed={liked} aria-label="点赞">
-            {liked ? <IHeartF size={27} className="text-neon" /> : <IHeart size={27} className="hg-ink hg-ov-shadow" />}
+            {liked ? <IHeartF size={27} className="text-neon" /> : <IHeart size={27} className="ios-overlay-ink ios-overlay-shadow" />}
             <span className="text-[12px] text-white/90 tabular-nums">{fmt(likeCount)}</span>
           </Button>
           <Button onClick={() => void onFav()} disabled={collectPending} aria-busy={collectPending} className="mobile-action-favorite flex flex-col items-center gap-1 pressable" aria-pressed={collected} aria-label="收藏">
-            {collected ? <IStarF size={27} className="hg-gold" /> : <IStar size={27} className="hg-ink hg-ov-shadow" />}
+            {collected ? <IStarF size={27} className="ios-overlay-star" /> : <IStar size={27} className="ios-overlay-ink ios-overlay-shadow" />}
             <span className="text-[12px] text-white/90 tabular-nums">{fmt(collectCount)}</span>
           </Button>
           <Button onClick={() => setPanel("comments")} className="mobile-action-comments flex flex-col items-center gap-1 pressable" aria-label={`评论 ${fmt(meta.comment)} 条`}>
-            <ICommentF size={26} className="hg-ink hg-ov-shadow" />
-            <span className="text-[12px] hg-ink-2 hg-ov-shadow tabular-nums">{fmt(meta.comment)}</span>
+            <ICommentF size={26} className="ios-overlay-ink ios-overlay-shadow" />
+            <span className="text-[12px] ios-overlay-ink-2 ios-overlay-shadow tabular-nums">{fmt(meta.comment)}</span>
           </Button>
           <Button onClick={() => setPanel("more")} className="mobile-action-more flex flex-col items-center gap-1 pressable" aria-label="更多播放设置">
-            <IMore size={26} className="hg-ink hg-ov-shadow" />
-            <span className="text-[12px] hg-ink-2 hg-ov-shadow">更多</span>
+            <IMore size={26} className="ios-overlay-ink ios-overlay-shadow" />
+            <span className="text-[12px] ios-overlay-ink-2 ios-overlay-shadow">更多</span>
           </Button>
         </div>
       )}
@@ -207,24 +207,24 @@ export default function FeedItemChrome({
 
           <Button onClick={() => void onLike()} disabled={likePending} aria-busy={likePending} aria-label="点赞" className="flex flex-col items-center gap-1 pressable" aria-pressed={liked}>
             <span key={heartBurst} className={heartBurst ? "a-pop" : ""}>
-              {liked ? <IHeartF size={30} className="text-neon" /> : <IHeart size={30} className="text-white tsh" />}
+              {liked ? <IHeartF size={30} className="text-neon" /> : <IHeart size={30} className="text-white ios-overlay-shadow" />}
             </span>
             <span className="text-[12px] text-white/90 tabular-nums">{fmt(likeCount)}</span>
           </Button>
 
           <Button onClick={() => setPanel("comments")} aria-label={`评论 ${fmt(meta.comment)} 条`} className="flex flex-col items-center gap-1 pressable">
-            <ICommentF size={27} className="text-white tsh" />
+            <ICommentF size={27} className="text-white ios-overlay-shadow" />
             <span className="text-[12px] text-white/90 tabular-nums">{fmt(meta.comment)}</span>
           </Button>
 
           <Button onClick={() => void onFav()} disabled={collectPending} aria-busy={collectPending} aria-label="收藏" className="flex flex-col items-center gap-1 pressable" aria-pressed={collected}>
-            {collected ? <IStarF size={27} className="hg-gold" /> : <IStar size={27} className="hg-ink hg-ov-shadow" />}
+            {collected ? <IStarF size={27} className="ios-overlay-star" /> : <IStar size={27} className="ios-overlay-ink ios-overlay-shadow" />}
             <span className="text-[12px] text-white/90 tabular-nums">{fmt(collectCount)}</span>
           </Button>
 
           {kind === "video" && (
             <Button onClick={() => setPanel("episodes")} aria-label="选集" className="flex flex-col items-center gap-1 pressable">
-              <IList size={26} className="text-white tsh" />
+              <IList size={26} className="text-white ios-overlay-shadow" />
               <span className="text-[12px] text-white/90">选集</span>
             </Button>
           )}
@@ -235,7 +235,7 @@ export default function FeedItemChrome({
       {!fs && !clean && isDesktop && (
         <div className="desktop-video-meta">
           <div className="flex items-center gap-2">
-            <span className="text-[16px] font-bold text-white tsh truncate">@{meta.author}</span>
+            <span className="text-[16px] font-bold text-white ios-overlay-shadow truncate">@{meta.author}</span>
             {episodes.length > 0 && (
               <span className="shrink-0 px-1.5 py-px rounded-md text-[12px] font-bold text-white"
                 style={{ background: "rgba(255,255,255,.16)" }}>
@@ -250,15 +250,15 @@ export default function FeedItemChrome({
               </Button>
             )}
             {!!meta.score && (
-              <span className="shrink-0 text-[12px] font-bold hg-gold hg-ov-shadow">{meta.score.toFixed(1)} 分</span>
+              <span className="shrink-0 text-[12px] font-bold ios-overlay-star ios-overlay-shadow">{meta.score.toFixed(1)} 分</span>
             )}
           </div>
 
-          <p className="mt-1 text-[14px] leading-snug hg-ink-2 hg-ov-shadow clamp-2">{meta.title}</p>
+          <p className="mt-1 text-[14px] leading-snug ios-overlay-ink-2 ios-overlay-shadow clamp-2">{meta.title}</p>
 
-          <p className="mt-1 text-[12px] leading-relaxed hg-ink-4 clamp-1">{meta.desc || "暂无简介"}</p>
+          <p className="mt-1 text-[12px] leading-relaxed ios-overlay-ink-4 clamp-1">{meta.desc || "暂无简介"}</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            <Button aria-label="视频详情" onClick={() => setPanel("detail")} className="min-h-11 px-4 rounded-full hg-chip text-[12px] inline-flex items-center gap-1">
+            <Button aria-label="视频详情" onClick={() => setPanel("detail")} className="min-h-11 px-4 rounded-full ios-overlay-chip text-[12px] inline-flex items-center gap-1">
               详情与标签<IChevR size={13} />
             </Button>
           </div>
@@ -272,7 +272,7 @@ export default function FeedItemChrome({
             <div className={`mobile-video-meta-copy relative pb-1 flex items-center gap-2 transition-opacity duration-150 ${scrubbing ? "opacity-35" : ""}`}>
               <div className="flex-1 min-w-0">
                 {!!meta.author && <div className="mobile-video-author">@{meta.author}</div>}
-                <p className="text-[15px] font-semibold leading-snug hg-ink-2 hg-ov-shadow-strong clamp-2">{meta.title}</p>
+                <p className="text-[15px] font-semibold leading-snug ios-overlay-ink-2 ios-overlay-shadow-strong clamp-2">{meta.title}</p>
                 <CurrentVideoTags tags={meta.tags} onOpen={openTag} onBlock={tag => openTagMenu([tag])} />
               </div>
             </div>
@@ -281,7 +281,7 @@ export default function FeedItemChrome({
             {!clean && (
               <div className={`mobile-video-meta-copy flex flex-wrap items-center gap-2 transition-opacity duration-150 ${scrubbing ? "opacity-35" : ""}`}>
                 <Button aria-label="视频详情" onClick={() => setPanel("detail")}
-                  className="min-h-11 flex items-center gap-0.5 text-[12px] font-medium hg-ink-3 hg-ov-shadow-strong pressable pointer-events-auto">
+                  className="min-h-11 flex items-center gap-0.5 text-[12px] font-medium ios-overlay-ink-3 ios-overlay-shadow-strong pressable pointer-events-auto">
                   {kind === "post" ? "图文详情" : `详情 · 第 ${curEp} 集`}<IChevR size={11} />
                 </Button>
                 {meta.tags.length > 0 && <span className="current-video-tags-hint">长按标签可屏蔽</span>}
@@ -320,10 +320,10 @@ export default function FeedItemChrome({
                   transition: scrubbing ? "width .14s ease, height .14s ease, box-shadow .14s ease" : "left .25s linear, width .14s ease, height .14s ease, box-shadow .14s ease",
                 }} />
               {scrubbing && activePct !== null && (
-                <div className="absolute left-1/2 -translate-x-1/2 -top-9 px-3 py-1 rounded-full hg-chip-strong backdrop-blur-md text-[13px] font-bold tabular-nums whitespace-nowrap pointer-events-none elev-2"
+                <div className="absolute left-1/2 -translate-x-1/2 -top-9 px-3 py-1 rounded-full ios-overlay-pill backdrop-blur-md text-[13px] font-bold tabular-nums whitespace-nowrap pointer-events-none"
                   style={{ boxShadow: "0 4px 16px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.14)" }}>
                   <span className="text-white">{fmtTime(activePct * (duration || 0))}</span>
-                  <span className="hg-ink-4 font-medium"> / {fmtTime(duration)}</span>
+                  <span className="ios-overlay-ink-4 font-medium"> / {fmtTime(duration)}</span>
                 </div>
               )}
             </div>}
@@ -342,7 +342,7 @@ export default function FeedItemChrome({
         <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
           <span className="w-[66px] h-[66px] rounded-full flex items-center justify-center backdrop-blur-md"
             style={{ background: "rgba(0,0,0,.55)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.12)" }}>
-            <IPlayF size={28} className="hg-ink ml-0.5" />
+            <IPlayF size={28} className="ios-overlay-ink ml-0.5" />
           </span>
         </div>
       )}
@@ -351,10 +351,10 @@ export default function FeedItemChrome({
       )}
       {isActive && err && (
         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-          <div className="rounded-xl p-5 flex flex-col items-center gap-3 text-[14px] hg-ink-2 pointer-events-auto" style={{ background: "rgba(0,0,0,.7)" }}>
+          <div className="rounded-xl p-5 flex flex-col items-center gap-3 text-[14px] ios-overlay-ink-2 pointer-events-auto" style={{ background: "rgba(0,0,0,.7)" }}>
             <span>视频暂时无法加载</span>
-            <span className="text-[12px] hg-ink-4 max-w-[240px] text-center break-all">{err}</span>
-            <Button className="hg-link text-[14px]" onClick={onRetryStream}>重试</Button>
+            <span className="text-[12px] ios-overlay-ink-4 max-w-[240px] text-center break-all">{err}</span>
+            <Button className="ios-overlay-link text-[14px]" onClick={onRetryStream}>重试</Button>
           </div>
         </div>
       )}

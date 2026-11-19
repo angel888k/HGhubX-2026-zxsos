@@ -200,7 +200,7 @@ function UserContent({ id, name, onBack, wide }: { id: number; name?: string; on
       </div>
     </div>
     <div ref={state.scroller} className="flex-1 scroll-y pt-3.5 pb-8">
-      <Surface className="rounded-(--r-lg) bg-s1 p-4 elev-1 a-rise">
+      <Surface className="rounded-(--r-lg) bg-s1 p-4 a-rise">
         <div className="flex items-center gap-3.5">
           <Avatar size={56} name={profile?.nickname || name || "U"} hue={220} ring />
           <div className="flex-1 min-w-0">

@@ -149,6 +149,17 @@ loopback、Windows 的自定义标题栏与注册表代理判断、Android 的 W
 `scripts/test-ui-feedback.mjs` 的同一组几何断言覆盖 320/390px 竖屏、667px 横屏
 （模拟左右非对称安全区）、768/1024px 平板及 1280px 桌面视口。Chromium 模拟不等同于原生设备验收。
 
+### 样式分层与唯一来源
+
+样式只有两个入口文件：`src/index.css`（整体包在 `@layer legacy`，只放布局、滚动条、
+窗口几何、桌面播放器定位与正文排版）和 `src/styles/ios.css`（无层，放全部控件材质、
+颜色令牌、动效与视频浮层）。CSS 级联里无层规则永远压过有层规则，因此控件外观一律
+写在 `ios.css`，不得在 `index.css` 再给同一控件写第二套颜色/圆角/阴影。
+桌面窗口（`win-*`）与桌面播放器控件（`player-control`/`player-speed-menu` 等）的
+最终外观已合并进 `index.css` 的对应规则，`ios.css` 不再重复覆盖；
+`kf-spin` 是 `index.css` 里唯一保留的关键帧，供 `ios.css` 的 `.ios-loader` 引用。
+视频浮层控件见 [feed-and-detail.md](feed-and-detail.md) 的 `ios-overlay-*` 约定。
+
 ## 状态转换
 
 - iOS 页面加载：`Started` → 应用布局；`Finished` → 再应用布局并关闭文本交互 → 80ms/350ms

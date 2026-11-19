@@ -117,6 +117,14 @@ Feed 负责列表播放页的条目位置、详情/帖子读取、标签门、�
 - 上下划切集的提示 toast 带 `tag="episode"`（`useFeedTouchGestures.ts`）；`store.tsx` 的
   `pushToastItem` 对同 tag 原地替换内容并重置 2200ms 计时，快速连续划集只显示一张最新卡片，
   不堆叠、不重放入场动画；无 tag 的 toast 仍按原逻辑堆叠（最多 3 张）。
+- 视频浮层控件只有一套材质：压在视频画面上的按钮/胶囊/面板统一挂
+  [`src/styles/ios.css`](../../src/styles/ios.css) 的 `ios-overlay-chip`（按钮）、
+  `ios-overlay-pill`（只读胶囊）、`ios-overlay-panel`（错误面板），文字用
+  `ios-overlay-ink*`，强调色用 `ios-overlay-star`/`ios-overlay-link`，保读阴影用
+  `ios-overlay-shadow*`。这些类固定深色玻璃与亮字，不随浅色主题变深；
+  旧 `hg-chip`/`hg-ink`/`hg-gold`/`hg-link`/`hg-ov-shadow`/`tsh`/`elev-*` 工具类已删除，
+  不得再新增。浮层上的金色/链接色是显式亮色，不用 `--p-star`/`--p-accent`
+  （浅色主题下这两个令牌会变深，压不住视频画面）。
 
 ## 验证命令
 

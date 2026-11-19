@@ -48,7 +48,7 @@ export function Empty({ icon, title, sub, action, onAction }: {
 }) {
   return (
     <div className="ios-empty flex flex-col items-center justify-center py-16 px-8 text-center a-rise">
-      <div className="w-16 h-16 rounded-(--r-md) tonal flex items-center justify-center mb-4">{icon}</div>
+      <div className="w-16 h-16 rounded-(--r-md) bg-sec text-on-sec flex items-center justify-center mb-4">{icon}</div>
       <div className="text-[16px] font-semibold text-on/90">{title}</div>
       {sub && <div className="text-xs text-mut mt-1.5 leading-relaxed">{sub}</div>}
       {action && (
@@ -69,7 +69,7 @@ export function ToastHost() {
         t.line ? (
           <div
             key={t.id}
-            className="a-toast pointer-events-auto relative flex items-center gap-2.5 max-w-full bg-s4/80 backdrop-blur-2xl rounded-[16px] pl-2 pr-3 py-2 elev-3 ring-1 ring-white/10"
+            className="a-toast pointer-events-auto relative flex items-center gap-2.5 max-w-full bg-s4/80 backdrop-blur-2xl rounded-[16px] pl-2 pr-3 py-2 ring-1 ring-white/10"
           >
             <span
               className={`grid place-items-center size-9 rounded-[12px] shrink-0 ${
@@ -104,7 +104,7 @@ export function ToastHost() {
             </div>
           </div>
         ) : (
-          <Surface key={t.id} className="a-toast pointer-events-auto flex items-center gap-2.5 max-w-full bg-s4/95 backdrop-blur-md rounded-(--r-sm) pl-3.5 pr-4 py-2.5 elev-3">
+          <Surface key={t.id} className="a-toast pointer-events-auto flex items-center gap-2.5 max-w-full bg-s4/95 backdrop-blur-md rounded-(--r-sm) pl-3.5 pr-4 py-2.5">
             {t.icon === "ok" && <ICheck size={16} className="text-mint shrink-0" />}
             {t.icon === "heart" && <IHeartF size={16} className="text-neon shrink-0" />}
             {t.icon === "star" && <IStarF size={16} className="text-amber shrink-0" />}

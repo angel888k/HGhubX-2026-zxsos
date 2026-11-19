@@ -206,10 +206,10 @@ export function FeedPlayerShellChrome({
                 transition: scrubbing ? "width .14s ease, height .14s ease, box-shadow .14s ease" : "left .25s linear, width .14s ease, height .14s ease, box-shadow .14s ease",
               }} />
             {scrubbing && activePct !== null && (
-              <div className="absolute left-1/2 -translate-x-1/2 -top-9 px-3 py-1 rounded-full hg-chip-strong backdrop-blur-md text-[13px] font-bold tabular-nums whitespace-nowrap pointer-events-none elev-2"
+              <div className="absolute left-1/2 -translate-x-1/2 -top-9 px-3 py-1 rounded-full ios-overlay-pill backdrop-blur-md text-[13px] font-bold tabular-nums whitespace-nowrap pointer-events-none"
                 style={{ boxShadow: "0 4px 16px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.14)" }}>
                 <span className="text-white">{fmtTime(activePct * (duration || 0))}</span>
-                <span className="hg-ink-4 font-medium"> / {fmtTime(duration)}</span>
+                <span className="ios-overlay-ink-4 font-medium"> / {fmtTime(duration)}</span>
               </div>
             )}
           </div>
@@ -220,7 +220,7 @@ export function FeedPlayerShellChrome({
       {!isDesktop && fs && !idle && (
         <>
           <Button onClick={exitFs} aria-label="退出全屏"
-            className="hg-chip-strong absolute z-40 w-11 h-11 rounded-full backdrop-blur-md flex items-center justify-center pressable elev-1"
+            className="ios-overlay-chip absolute z-40 w-11 h-11 rounded-full backdrop-blur-md flex items-center justify-center pressable"
             style={{
               top: rotated ? 12 : "calc(var(--sat, 0px) + 6px)",
               right: rotated ? "calc(var(--sab, 0px) + 12px)" : "calc(var(--sar, 0px) + 12px)",
@@ -234,10 +234,10 @@ export function FeedPlayerShellChrome({
               paddingRight: fsSafeRight,
             }}>
             <Button onClick={() => videoRef.current?.toggle()} aria-label={paused ? "播放" : "暂停"}
-              className="hg-chip shrink-0 w-9 h-9 rounded-full flex items-center justify-center pressable">
+              className="ios-overlay-chip shrink-0 w-9 h-9 rounded-full flex items-center justify-center pressable">
               {paused ? <IPlayF size={18} /> : <IPauseF size={17} />}
             </Button>
-            <PlaybackTime clock={playbackClock} className="shrink-0 text-[12px] font-semibold hg-ink-2 tabular-nums" />
+            <PlaybackTime clock={playbackClock} className="shrink-0 text-[12px] font-semibold ios-overlay-ink-2 tabular-nums" />
             <Button
               aria-label={speedLock ? "解除倍速锁定" : `切换倍速，当前 ${effRate} 倍`}
               onClick={() => {
@@ -246,17 +246,17 @@ export function FeedPlayerShellChrome({
                 const i = seq.indexOf(rate);
                 setRate(seq[(i + 1) % seq.length]);
               }}
-              className={`ml-auto shrink-0 flex items-center gap-1 px-2.5 h-8 rounded-full text-[13px] font-bold pressable ${effRate !== 1 ? "bg-white text-[#191919]" : "hg-chip hg-ink-2"}`}>
+              className={`ml-auto shrink-0 flex items-center gap-1 px-2.5 h-8 rounded-full text-[13px] font-bold pressable ${effRate !== 1 ? "bg-white text-[#191919]" : "ios-overlay-chip ios-overlay-ink-2"}`}>
               <IBoltF size={12} />{effRate}x
             </Button>
             {curEp < episodes.length && (
               <Button onClick={() => pickEp(curEp + 1)}
-                className="shrink-0 flex items-center gap-1 px-2.5 h-8 rounded-full text-[13px] font-semibold hg-chip hg-ink-2 pressable"
+                className="shrink-0 flex items-center gap-1 px-2.5 h-8 rounded-full text-[13px] font-semibold ios-overlay-chip ios-overlay-ink-2 pressable"
                 aria-label={`下一集 第${curEp + 1}集`}>
                 <IVertSwap size={12} />下集
               </Button>
             )}
-            <span className="shrink-0 text-[12px] hg-ink-4 tabular-nums">{fmtTime(duration)}</span>
+            <span className="shrink-0 text-[12px] ios-overlay-ink-4 tabular-nums">{fmtTime(duration)}</span>
           </div>
         </>
       )}
@@ -362,7 +362,7 @@ export function FeedMobileTopTools({
       }}>
       {!clean && currentQuality && <span className="feed-current-quality" aria-label={`当前清晰度：${currentQuality === "HD" ? "高清" : "标清"}`}>{currentQuality}</span>}
       {fs && <Button onClick={lockControls} aria-label="屏幕锁定" title="屏幕锁定"
-        className="hg-chip w-11 h-11 rounded-full flex items-center justify-center pressable elev-1"><ILockF size={17} /></Button>}
+        className="ios-overlay-chip w-11 h-11 rounded-full flex items-center justify-center pressable"><ILockF size={17} /></Button>}
     </div>
   );
 }

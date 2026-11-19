@@ -148,7 +148,7 @@ export default function Player({
           {!playing && !waiting && !errMsg && (
             <Button onClick={toggle} aria-label="播放"
               className="absolute inset-0 flex items-center justify-center">
-              <span className="w-16 h-16 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center elev-2 pressable">
+              <span className="w-16 h-16 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center pressable">
                 <IPlayF size={26} className="text-white ml-0.5" />
               </span>
             </Button>
@@ -164,7 +164,7 @@ export default function Player({
                     </span>
                   )}
                   <Input aria-label="播放进度" type="range" {...seek.inputProps}
-                    className="hg-range" style={{ ...seek.inputProps.style, "--fill": `${pct}%` } as React.CSSProperties} />
+                    className="ios-range" style={{ ...seek.inputProps.style, "--fill": `${pct}%` } as React.CSSProperties} />
                 </div>
                 <span className="post-player-time">{fmtTime(seek.time)} / {fmtTime(duration)}</span>
               </div>

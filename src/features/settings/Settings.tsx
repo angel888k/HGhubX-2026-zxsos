@@ -363,7 +363,7 @@ export default function Settings({ onBack, initialSection }: { onBack: () => voi
       <Modal label="关于 HGhubX" open={about} onClose={() => setAbout(false)} width={392}>
         <div className="p-5">
           <div className="flex items-center gap-3">
-            <span className="w-11 h-11 rounded-(--r-sm) brand-grad glow-neon flex items-center justify-center text-on-primary text-[17px] font-black">H</span>
+            <span className="w-11 h-11 rounded-(--r-sm) brand-grad flex items-center justify-center text-on-primary text-[17px] font-black">H</span>
             <div>
               <div className="text-[16px] font-bold text-on leading-tight">HGhubX</div>
               <div className="text-[12px] text-mut mt-0.5">HGhubX 客户端 v{APP_VERSION}</div>
