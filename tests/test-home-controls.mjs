@@ -36,6 +36,8 @@ try {
   assert.deepEqual(railOrder, ["点赞", "收藏", "评论 89 条", "更多播放设置"]);
   assert.equal(await page.locator(".mobile-playback-episodes").innerText(), "选集 · 全109集");
   assert.equal(await page.locator(".feed-current-quality").innerText(), "HD");
+  assert.equal(await page.locator(".mobile-episode-indicator").count(), 0);
+  assert.equal(await page.locator(".mobile-video-episode").innerText(), "第1集");
   assert.equal(await page.locator(".feed-mobile-top-tools button").count(), 0);
   assert.deepEqual(await page.locator(".mobile-playback-quick").evaluateAll(buttons => buttons.map(button => button.getAttribute("aria-label"))), ["取消静音", "关闭上下划切集"]);
   assert.equal(await page.getByRole("button", { name: "搜索", exact: true }).count(), 0);
