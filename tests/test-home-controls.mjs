@@ -49,13 +49,16 @@ try {
   console.log("✓ portrait rail, real episode total, HD badge, bottom quick controls, and one panel entry");
 
   await page.evaluate(() => window.homeControlsProbe.setClean(true));
-  await page.locator(".mobile-clean-lock").waitFor();
+  const cleanLock = page.locator(".mobile-clean-lock");
+  await cleanLock.waitFor();
+  const cleanLockBox = await cleanLock.boundingBox();
+  assert.ok(cleanLockBox && cleanLockBox.x > 390 / 2);
   assert.equal(await page.locator(".feed-current-quality").count(), 0);
   await page.screenshot({ path: path.join(output, "home-clean.png") });
   await page.getByRole("button", { name: "屏幕锁定", exact: true }).click();
   assert.equal(await probe("locked"), true);
   await page.evaluate(() => { window.homeControlsProbe.setLocked(false); window.homeControlsProbe.setClean(false); });
-  console.log("✓ clean-screen playback shows a left-center screen-lock control");
+  console.log("✓ clean-screen playback shows a right-center screen-lock control");
 
   await page.getByRole("button", { name: "取消静音" }).click();
   assert.equal(await probe("muted"), false);
@@ -96,11 +99,9 @@ try {
   assert.equal(await probe("portraitFit"), "cover");
   assert.equal(await page.locator(".playback-settings-row").filter({ hasText: "上下划切集" }).count(), 0);
   assert.equal(await page.locator(".playback-settings-row").filter({ hasText: "静音" }).count(), 0);
-  assert.equal(await page.locator(".playback-setting-action").filter({ hasText: "屏幕锁定" }).count(), 1);
-  await page.locator(".playback-setting-action").filter({ hasText: "屏幕锁定" }).click();
-  assert.equal(await probe("locked"), true);
-  await page.locator(".playback-settings-sheet").waitFor({ state: "detached" });
-  console.log("✓ quality, rate, fit, and screen lock are in settings; primary playback actions stay in the dock");
+  assert.equal(await page.locator(".playback-setting-action").count(), 0);
+  await page.getByRole("button", { name: "关闭播放设置" }).click();
+  console.log("✓ quality, rate, and fit remain in settings; primary playback actions stay in the dock");
 
   await page.setViewportSize({ width: 844, height: 390 });
   await page.waitForTimeout(150);
