@@ -333,8 +333,8 @@ export default function Feed({
 
   /* 倍速：中心小方块打开偏好，右上长按 2x 起、左右滑换挡，左下 0.5x。 */
   const effRate = holdSpeed || speedLock || (holdSlow ? 0.5 : rate);
-  /* 竖屏快捷胶囊的显隐：不卸载、只改 opacity，这样淡入淡出都能过渡（#19） */
-  const capsuleOn = !fs && !clean && !isDesktop && (landscapeVideo || zoom.s > 1.05);
+  /* The pinch-zoom reset capsule fades in place without unmounting (issue #19). */
+  const capsuleOn = !fs && !clean && !isDesktop && zoom.s > 1.05;
 
   /* 若用户在视频首帧宽高解析出来前已点进全屏，解析出横屏后自动补发横屏方向请求 */
   useEffect(() => {
@@ -669,7 +669,6 @@ export default function Feed({
                   curEp={curEp} duration={duration} meta={meta} post={post} hevcUrl={hevcUrl}
                   preferHevc={preferHevc} setPreferHevc={setPreferHevc}
                   landscapeVideo={landscapeVideo} capsuleOn={capsuleOn} zoom={zoom} setZoom={setZoom}
-                  portraitFit={portraitFit} setPortraitFit={setPortraitFit}
                   liked={liked} collected={collected} likePending={likePending} collectPending={collectPending}
                   heartBurst={heartBurst} likeCount={likeCount} collectCount={collectCount}
                   paused={paused} waiting={waiting} err={err} scrub={scrub} barRef={barRef} barPct={barPct}

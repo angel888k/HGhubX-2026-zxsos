@@ -273,12 +273,16 @@ async function portraitFitChecks(page) {
   });
   await afterCommit();
   assert.equal(await objectFit(), "contain", "Landscape video in a portrait viewport must default to contain");
+  assert.equal(await page.getByRole("button", { name: "铺满", exact: true }).count(), 0, "Floating fill control must be removed");
+  assert.equal(await page.getByRole("button", { name: "横屏", exact: true }).count(), 0, "Floating rotate control must be removed");
+  await page.getByRole("button", { name: "更多播放设置" }).click();
+  await page.getByRole("dialog", { name: "播放设置" }).waitFor();
   await page.getByRole("button", { name: "铺满", exact: true }).click();
   await page.waitForFunction(() => getComputedStyle(document.querySelector("video")).objectFit === "cover");
   await page.getByRole("button", { name: "适应", exact: true }).click();
   await page.waitForFunction(() => getComputedStyle(document.querySelector("video")).objectFit === "contain");
   return { viewport: "390x844", portrait_source: "360x640", portrait_object_fit: portrait.objectFit,
-    landscape_default_fit: "contain", landscape_toggle: ["contain", "cover", "contain"] };
+    landscape_default_fit: "contain", landscape_toggle: ["contain", "cover", "contain"], floating_fit_rotate: 0 };
 }
 
 async function seekChecks(page, legacy) {
