@@ -668,7 +668,7 @@ export default function Feed({
                 )}
 
                 <FeedItemChrome
-                  isActive={isActive} isDesktop={isDesktop} fs={fs} clean={clean} mode={mode} kind={kind}
+                  isActive={isActive} isDesktop={isDesktop} fs={fs} clean={clean} rotated={rotated} mode={mode} kind={kind}
                   title={title} index={index} effectiveLength={effectiveVideoIds.length} bottomInset={bottomInset}
                   curEp={curEp} duration={duration} meta={meta} post={post} hevcUrl={hevcUrl}
                   preferHevc={preferHevc} setPreferHevc={setPreferHevc}
