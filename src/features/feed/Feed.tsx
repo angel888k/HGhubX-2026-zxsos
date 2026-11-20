@@ -160,6 +160,10 @@ export default function Feed({
   const openTagMenu = (selected: string[] = []) => { setTagSelection(selected); setPanel(null); setTagMenu(true); };
   const openTag = (tag: string) => { closePanels(); store.push({ kind: "tag", tag, name: tag }); };
   const lockControls = () => { setPanel(null); setControlsLocked(true); };
+  const togglePlayback = useCallback(() => {
+    videoRef.current?.toggle();
+  }, []);
+
   const toggleSwipeEp = () => {
     const next = !swipeEp;
     setSwipeEp(next);
@@ -672,7 +676,7 @@ export default function Feed({
                   portraitFit={portraitFit} setPortraitFit={setPortraitFit}
                   liked={liked} collected={collected} likePending={likePending} collectPending={collectPending}
                   heartBurst={heartBurst} likeCount={likeCount} collectCount={collectCount}
-                  paused={paused} waiting={waiting} err={err} scrub={scrub} barRef={barRef} barPct={barPct}
+                  paused={paused} onTogglePlay={togglePlayback} waiting={waiting} err={err} scrub={scrub} barRef={barRef} barPct={barPct}
                   playbackClock={playbackClock} onBack={onBack} enterFs={enterFs} stepDir={stepDir} canStep={canStep}
                   onLike={onLike} onFav={onFav} setPanel={setPanel} openTag={openTag} openTagMenu={openTagMenu}
                   muted={muted} onToggleMuted={() => setMuted(value => !value)}

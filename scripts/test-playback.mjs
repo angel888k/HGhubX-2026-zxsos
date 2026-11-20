@@ -174,6 +174,14 @@ async function gestureChecks(page) {
     }));
   });
   const clean = () => page.locator('.player-root').getAttribute('data-clean');
+  // Regression: after a double-tap pause, a single click on the center play icon resumes playback.
+  await tap(); await tap();
+  await page.waitForFunction(() => document.querySelector("video").paused);
+  const centerPlay = page.getByRole("button", { name: "播放", exact: true });
+  await centerPlay.waitFor();
+  await centerPlay.click();
+  await page.waitForFunction(() => !document.querySelector("video").paused);
+  assert.equal(await clean(), 'false', 'Center play icon must resume playback without another double tap');
   const start = Date.now();
   await tap();
   await page.waitForFunction(() => document.querySelector('.player-root')?.dataset.clean === 'true');

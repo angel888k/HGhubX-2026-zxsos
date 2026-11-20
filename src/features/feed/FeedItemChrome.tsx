@@ -57,6 +57,7 @@ type Props = {
   likeCount: number;
   collectCount: number;
   paused: boolean;
+  onTogglePlay: () => void;
   waiting: boolean;
   err: string;
   scrub: { pct: number; target: number } | null;
@@ -90,7 +91,7 @@ export default function FeedItemChrome({
   curEp, duration, meta, post, hevcUrl, preferHevc, setPreferHevc,
   landscapeVideo, capsuleOn, zoom, setZoom, portraitFit, setPortraitFit,
   liked, collected, likePending, collectPending, heartBurst, likeCount, collectCount,
-  paused, waiting, err, scrub, barRef, barPct, playbackClock,
+  paused, onTogglePlay, waiting, err, scrub, barRef, barPct, playbackClock,
   onBack, enterFs, stepDir, canStep, onLike, onFav, setPanel, openTag, openTagMenu,
   muted, onToggleMuted, swipeEnabled, swipeEp, onToggleSwipe, onLock,
   onBarDown, onBarMove, onBarUp, onRetryStream, toast,
@@ -366,10 +367,11 @@ export default function FeedItemChrome({
       {/* 暂停 / 缓冲 */}
       {isActive && paused && !err && !scrubbing && (
         <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-          <span className="w-[66px] h-[66px] rounded-full flex items-center justify-center backdrop-blur-md"
+          <Button type="button" aria-label="播放" onClick={onTogglePlay}
+            className="w-[66px] h-[66px] rounded-full flex items-center justify-center backdrop-blur-md pointer-events-auto pressable"
             style={{ background: "rgba(0,0,0,.55)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.12)" }}>
             <IPlayF size={28} className="hg-ink ml-0.5" />
-          </span>
+          </Button>
         </div>
       )}
       {isActive && waiting && !err && !paused && (
