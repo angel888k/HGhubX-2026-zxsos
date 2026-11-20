@@ -265,7 +265,6 @@ async function gestureChecks(page) {
 //   修复前：landscapeVideo=false 且已测量、非全屏、vpLandscape=false → "cover"（裁切铺满）→ 断言失败；
 //   修复后：竖屏视频一律 "contain"（保留原始比例）→ 断言通过。
 // 第二段用横屏源验证「铺满/适应」切换链路未被修复破坏（该分支修复前后行为一致）。
-<<<<<<< ours
 // A landscape fullscreen episode swap resets the measured video size. Until the
 // next source is playing, the stage is not rotated yet; the episode hint must
 // stay hidden instead of flashing at the portrait toast anchor.
@@ -277,20 +276,10 @@ async function episodeToastChecks(page) {
     window.__TAURI_INTERNALS__ = { invoke: async () => null };
   });
   await page.goto(`${report.ui}/tests/player-seek.html?portrait-fit=1&swipe-ep=1&proxy=${encodeURIComponent(report.media)}`);
-=======
-// Ambient glow is a sampled color wash behind the video. It must follow the
-// live setting, render on a readable source, and leave no layer when disabled.
-async function ambientGlowChecks(page) {
-  await page.addInitScript(() => {
-    window.__TAURI_INTERNALS__ = { invoke: async () => null };
-  });
-  const open = () => page.goto(`${report.ui}/tests/player-seek.html?diagnostics=1&portrait-fit=1&proxy=${encodeURIComponent(report.portraitMedia)}`);
->>>>>>> theirs
   const dismissGuide = async () => {
     const done = page.locator(".mobile-hold-guide-done").first();
     await done.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
     await done.click({ timeout: 5000 }).catch(() => {});
-<<<<<<< ours
   };
   const waitForPlayback = () => page.waitForFunction(() => {
     const v = document.querySelector("video");
@@ -322,8 +311,18 @@ async function ambientGlowChecks(page) {
   return { deferredWhileLoading: true, host: "rotated-stage", text: (await toast.innerText()).trim() };
 }
 
-async function portraitFitChecks(page, dir) {
-=======
+
+// Ambient glow is a sampled color wash behind the video. It must follow the
+// live setting, render on a readable source, and leave no layer when disabled.
+async function ambientGlowChecks(page) {
+  await page.addInitScript(() => {
+    window.__TAURI_INTERNALS__ = { invoke: async () => null };
+  });
+  const open = () => page.goto(`${report.ui}/tests/player-seek.html?diagnostics=1&portrait-fit=1&proxy=${encodeURIComponent(report.portraitMedia)}`);
+  const dismissGuide = async () => {
+    const done = page.locator(".mobile-hold-guide-done").first();
+    await done.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
+    await done.click({ timeout: 5000 }).catch(() => {});
     await page.waitForFunction(() => !document.querySelector(".mobile-hold-guide-done"), null, { timeout: 5000 }).catch(() => {});
   };
   const waitForPlayback = () => page.waitForFunction(() => {
@@ -402,8 +401,7 @@ async function portraitFitChecks(page, dir) {
   return { defaultOn: true, sampledFrames: on.frames, offLayers: off.layers, settingsToggle: true, morePanelToggle: false };
 }
 
-async function portraitFitChecks(page) {
->>>>>>> theirs
+async function portraitFitChecks(page, dir) {
   // The mobile fullscreen transition asks Tauri to lock the screen orientation.
   // This scenario runs in Chromium, so provide only that bridge and keep the
   // rest of the playback stack real.
