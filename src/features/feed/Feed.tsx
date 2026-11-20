@@ -163,7 +163,7 @@ export default function Feed({
   const toggleSwipeEp = () => {
     const next = !swipeEp;
     setSwipeEp(next);
-    toast(next ? "上下划切集已开启" : "上下划切集已关闭", "info");
+    toast(next ? "上下划切集已开启" : "上下划切集已关闭", "info", "swipe-toggle");
   };
 
   useEffect(() => { setTagMenu(false); setTagSelection([]); }, [curId, store.lineEpoch, accountScope]);
