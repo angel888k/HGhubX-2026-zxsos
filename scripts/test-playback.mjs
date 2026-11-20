@@ -102,6 +102,7 @@ async function balanceVolumeChecks(page) {
   await page.getByRole("button", { name: "取消静音", exact: true }).click();
   await page.waitForFunction(() => document.querySelector("video")?.dataset.balanceVolume === "on", null, { timeout: 10000 });
   assert.equal(await page.locator("video").evaluate(video => video.dataset.balanceVolume), "on", "Balance volume must attach after the first user gesture");
+  return { attached: true, state: "on" };
 }
 
 
