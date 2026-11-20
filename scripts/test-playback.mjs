@@ -295,6 +295,9 @@ async function portraitFitChecks(page) {
   await page.waitForFunction(() => getComputedStyle(document.querySelector("video")).objectFit === "cover");
   await page.getByRole("button", { name: "适应", exact: true }).click();
   await page.waitForFunction(() => getComputedStyle(document.querySelector("video")).objectFit === "contain");
+  // #177 的铺满/适应切换在播放设置面板内完成；先关面板，避免遮挡后续「全屏」按钮。
+  await page.getByRole("button", { name: "关闭播放设置", exact: true }).click();
+  await page.getByRole("dialog", { name: "播放设置" }).waitFor({ state: "detached" });
 
   // Rotated landscape fullscreen: the clean-mode lock and the shutdown unlock
   // must occupy the same stage-local anchor even when the phone has a bottom
