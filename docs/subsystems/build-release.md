@@ -21,9 +21,12 @@ ad-hoc 签名都不应进入仓库或本机脚本输出。
   [`tauri.tv.conf.json`](../../src-tauri/tauri.tv.conf.json)。
 - Rust 版本：[`src-tauri/Cargo.toml`](../../src-tauri/Cargo.toml) 的 `[package].version`、
   `custom-protocol` feature；[`src-tauri/Cargo.lock`](../../src-tauri/Cargo.lock) 的 `hghubx` 包。
-- CI/CD（全仓唯一工作流）：[`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)，
-  合并了日常校验（`frontend`、`rust`、`smoke`、`playback` 矩阵）与发版构建（`windows`、
-  `android` 标准/TV 矩阵、`macos`、`ios`、`linux`、`release`），每次事件只产生一条运行记录。
+- CI/CD（标准版工作流）：[`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)，
+  日常校验（`frontend`、`rust`、`smoke`、`playback` 矩阵，不含 TV 验收）与发版构建（`windows`、
+  `android` 标准版、`macos`、`ios`、`linux`、`release`）。
+- TV 独立工作流：[`.github/workflows/tv.yml`](../../.github/workflows/tv.yml)，
+  `acceptance`（TV 验收，路径过滤触发）、`package`（TV APK）、`release-assets`（向标准版
+  Release 追加 TV 产物）；与 `ci.yml` 彻底分开，各自产生运行记录。
 - 版本/预算门禁：[`scripts/set-version.mjs`](../../scripts/set-version.mjs)、
   [`scripts/check-version-sync.mjs`](../../scripts/check-version-sync.mjs)、
   [`scripts/check-doc-links.mjs`](../../scripts/check-doc-links.mjs)、
@@ -63,10 +66,11 @@ ad-hoc 签名都不应进入仓库或本机脚本输出。
    - `smoke`：安装 Chromium，运行 `pnpm test:smoke`。
    - `playback`：优先使用运行器的 FFmpeg 和浏览器；需要安装 FFmpeg 时沿用维护者指定的
      `https://mirrors.edge.kernel.org/ubuntu/`，失败不自动换源。单次工作流并行执行 `core` 与 `extended`
-     （覆盖 `seek,legacy,lifecycle,gesture,proxy,portrait-fit,ios-native,recovery,review,tv,post-flicker`）；
+     （覆盖 `seek,legacy,lifecycle,gesture,proxy,portrait-fit,post-flicker,ios-native,recovery,review`）；
      `review` 场景运行 `scripts/test-round-review.mjs`（搜索返回键与网络设置检查）；账号同步/批量取消收藏
      回归 `scripts/test-account-sync-empty-state.mjs` 在 smoke 的 `account-sync` 套件中运行，不在 `review` 中重复执行。
      手动 `mode=playback` 可只跑播放诊断或指定 `scenarios` 子集（如 `pnpm test:playback --scenarios review`）。
+     TV 验收不在本工作流，见第 8 条。
 5. CI/CD 打包与发布（推送 `v*` tag 或手动 `mode=package`）：在分支上手动运行且 `tag` 留空时，
    只构建所选范围（如 `platforms=ios` 仅验证未签名 ipa），不发布 GitHub Release。各平台构建 job 先跑
    `node scripts/set-version.mjs "$V"`：同步 `package.json`、`tauri.conf.json`（含
@@ -74,24 +78,37 @@ ad-hoc 签名都不应进入仓库或本机脚本输出。
    `versionCode = major*1_000_000 + minor*1_000 + patch`，minor/patch 超过 999 会报错。
 6. 平台产物：
    - Windows：NSIS 安装包 + `HGhubX_<version>_x64_portable.zip`。
-   - Android 标准版与 TV 版：`android` 矩阵（`standard` / `tv`）执行 `pnpm tauri android build --apk --split-per-abi`
+   - Android 标准版：`ci.yml` 的 `android` job 执行 `pnpm tauri android build --apk --split-per-abi`
      （正式发布编 `aarch64 armv7 x86_64`，`quick` 编 `aarch64 armv7`，显式 `android-arm64` 仅编 `aarch64`），
-     按 ABI 产出并用 secrets 中的 keystore `apksigner` 签名，文件名分别为
-     `HGhubX_<version>_<abi>.apk` 与 `HGhubX-TV_<version>_<abi>.apk`；随后 `aapt2 dump badging`
-     打印实际 versionCode。
+     按 ABI 产出并用 secrets 中的 keystore `apksigner` 签名，文件名 `HGhubX_<version>_<abi>.apk`；
+     随后 `aapt2 dump badging` 打印实际 versionCode。TV 版见第 8 条。
    - macOS：`quick` 只编 arm64；正式发布编 universal，产物 `HGhubX_<version>_universal.dmg`
      （quick 为 `_arm64.dmg`），ad-hoc 签名。
    - iOS：`pnpm tauri ios init --ci`，用 PlistBuddy 补横竖屏和 ATS，再跑
      `scripts/build-ios-unsigned.sh <version>`；Xcode `CODE_SIGNING_ALLOWED=NO`，产出
      `HGhubX_<version>_ios.ipa`。
    - Linux：`pnpm tauri build` 产出 deb，文件名 `HGhubX_<version>_amd64.deb`。
-7. `release` job 依赖五个平台构建 job（其中 `android` 矩阵覆盖标准版与 TV 版），在 `!cancelled()` 且
+7. `release` job 依赖五个平台构建 job，在 `!cancelled()` 且
    `windows`、`android`、`macos`、`linux` 全部成功（`ios` 允许成功或失败）时执行；发布条件是 `v*` tag ref，
    或手动 `mode=package` 且 `tag` 非空、`platforms=all`、`quick=false`。它下载已有 artifact，用
    `softprops/action-gh-release` 上传 `artifacts/*`；如果存在 `docs/release-notes/<tag>.md` 就作为正文，
    否则开启 `generate_release_notes` 自动生成说明。
    正文格式以 `docs/release-notes/TEMPLATE.md` 与 AGENTS.md「Release 描述格式」为准：维护者发布前
    按模板写 `docs/release-notes/<tag>.md`；自动生成说明只是缺文件时的兜底。
+8. TV 独立工作流 `tv.yml`（与标准版彻底分开）：
+   - `acceptance`：PR/推送 `main` 且 TV 相关路径变化（`src/tv/**`、`src/shared/**`、入口与样式、
+     TV 测试/fixture、`tauri.tv.conf.json`、依赖清单、`tv.yml` 自身）时运行
+     `node scripts/test-tv-remote.mjs`（真实 TV bootstrap/Worker/片库，mock IPC，13 场景）；
+     手动 `mode=acceptance` 可无条件运行。失败仍上传 `test-results/tv-remote/` 诊断，保留 7 天。
+     不修改 TV 相关路径的 PR 不触发 TV 验收，TV 的偶发失败不再拖累标准版门禁。
+   - `package`：`v*` tag 或手动 `mode=package` 触发；先 `cp tauri.tv.conf.json tauri.android.conf.json`，
+     其余与标准版 Android 相同（`set-version.mjs`、SDK/NDK、`--split-per-abi`、keystore 签名、
+     `aapt2` 复核），产物 `HGhubX-TV_<version>_<abi>.apk`，artifact 名 `android-tv`；
+     `quick` 编 `aarch64 armv7`，否则编 `aarch64 armv7 x86_64`。
+   - `release-assets`：`package` 成功且带 tag（`v*` ref 或手动 `tag` 非空）时，轮询等待标准版
+     `release` job 创建 Release（最多 45 分钟），然后 `gh release upload <tag> --clobber` 追加 TV APK；
+     超时仍无 Release 时兜底独立创建（正文沿用 `docs/release-notes/<tag>.md`，缺失则自动生成），
+     并打 warning 提示标准版发布缺失。最终 Release 同时含标准版与 TV 产物，格式与旧版一致。
 
 ## 状态转换
 
@@ -102,11 +119,13 @@ ad-hoc 签名都不应进入仓库或本机脚本输出。
   `bundle.android.versionCode` → APK 签名 → `aapt2` 复核。
 - iOS：`ios init` 生成工程 → 补 plist → 启动 Tauri options server → Xcode release 构建 →
   `CODE_SIGNING_ALLOWED=NO` → 打包 Payload → `unzip -tq` 校验 → artifact。
-- CI：PR 或推送 `main` 触发 `frontend`/`rust`/`smoke`/`playback`，不打包。
-  `v*` tag 触发全平台构建；手动打包用 `mode=package` 和 `platforms` 选范围，
+- CI：PR 或推送 `main` 触发 `ci.yml` 的 `frontend`/`rust`/`smoke`/`playback`，不打包；
+  TV 相关路径变化同时触发 `tv.yml` 的 `acceptance`。`v*` tag 同时触发两条工作流的全平台构建；
+  手动打包用 `mode=package` 和 `platforms` 选范围（TV 在 `tv.yml` 单独手动触发），
   `tag` 留空只上传 Actions 产物，不进入发布任务。
-- 发布：满足上述 tag 条件 → 等待平台 job 结束 → release job 下载已有 artifact 并合并 →
-  读取版本说明 → 创建/更新 GitHub Release。在分支上手动运行且 `tag` 留空不进入发布 job。
+- 发布：满足上述 tag 条件 → `ci.yml` 等待平台 job 结束 → release job 下载已有 artifact 并合并 →
+  读取版本说明 → 创建/更新 GitHub Release → `tv.yml` 的 `release-assets` 追加 TV APK。
+  在分支上手动运行且 `tag` 留空不进入发布 job。
 
 ## 约束与失败行为
 
@@ -146,5 +165,7 @@ node scripts/check-version-sync.mjs
 
 `make check` 不包含 smoke；需要浏览器用例时单独 `pnpm test:smoke`（含 `account-sync`；账号 fixture
 也可单独用 `node scripts/test-account-sync-empty-state.mjs` 运行）。`pnpm test:playback` 需要
-FFmpeg/Chromium，iOS 打包校验通过 `ci.yml`（`mode=package, platforms=ios`）在 macOS runner 执行。
+FFmpeg/Chromium（TV 验收也可本地 `node scripts/test-tv-remote.mjs`，只需 Chromium），
+iOS 打包校验通过 `ci.yml`（`mode=package, platforms=ios`）在 macOS runner 执行，
+TV 验收与打包校验通过 `tv.yml`（`mode=acceptance` / `mode=package`）执行。
 报告里必须写清命令、版本/输入、字面结果和退出状态；没有运行的命令不能写成“已通过”。

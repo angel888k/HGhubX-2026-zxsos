@@ -1,4 +1,5 @@
-// Executed by the existing GitHub Actions playback workflow with scenarios=tv.
+// Executed by the TV workflow (.github/workflows/tv.yml, acceptance job); also runnable
+// locally with `node scripts/test-tv-remote.mjs` or via `pnpm test:playback --scenarios tv`.
 // Real TV bootstrap/components/Worker/IndexedDB. All IPC/media remain fixtures.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
