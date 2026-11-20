@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-type PlaybackPreferences = { rate: number; quality: "main" | "hevc"; autoplayNext: boolean };
+type PlaybackPreferences = { rate: number; quality: "main" | "hevc"; autoplayNext: boolean; balanceVolume: boolean };
 const KEY = "hghubx_tv_playback_v1";
 const LEGACY_KEY = "hghubx-tv-playback-v1";
 function read(): PlaybackPreferences {
@@ -18,9 +18,9 @@ function read(): PlaybackPreferences {
       try { localStorage.removeItem(LEGACY_KEY); } catch { /* ignore */ }
     }
     const value = JSON.parse(raw || "{}");
-    return { rate: [0.75, 1, 1.25, 1.5, 2].includes(value.rate) ? value.rate : 1, quality: value.quality === "hevc" ? "hevc" : "main", autoplayNext: value.autoplayNext !== false };
+    return { rate: [0.75, 1, 1.25, 1.5, 2].includes(value.rate) ? value.rate : 1, quality: value.quality === "hevc" ? "hevc" : "main", autoplayNext: value.autoplayNext !== false, balanceVolume: value.balanceVolume === true };
   }
-  catch { return { rate: 1, quality: "main", autoplayNext: true }; }
+  catch { return { rate: 1, quality: "main", autoplayNext: true, balanceVolume: false }; }
 }
 let state = read();
 const listeners = new Set<() => void>();

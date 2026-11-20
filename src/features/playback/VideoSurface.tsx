@@ -8,6 +8,7 @@ import { usePlaybackActivity } from "./usePlaybackActivity";
 import { useProxyPlaybackRecovery } from "./useProxyPlaybackRecovery";
 import { createHlsRecovery, type HlsRecovery } from "./hlsRecovery";
 import AmbientGlow from "./AmbientGlow";
+import { setBalanceVolume } from "./balanceVolume";
 
 if (Hls.version) registerHlsVersion(Hls.version);
 
@@ -43,6 +44,8 @@ type Props = {
   rate?: number;
   /** Subtle color wash sampled from the current frame; requires a readable video source. */
   ambientGlow?: boolean;
+  /** App-level volume leveling; the Settings toggle wires it into the Web Audio chain. */
+  balanceVolume?: boolean;
   onTime?: (t: number) => void;
   onDuration?: (d: number) => void;
   onSize?: (w: number, h: number, measurementKey: string) => boolean | void;
@@ -60,7 +63,7 @@ type Props = {
 
 /** 只负责「播」：hls.js + video 元素，控制条由外层渲染。 */
 const VideoSurface = forwardRef<VideoHandle, Props>(function VideoSurface(
-  { src, poster, autoPlay = true, active = true, fadeIn = true, videoElementRef, measurementKey = src, diagnosticContext = {}, muted = false, loop = false, fit = "contain", volume = 1, rate = 1, ambientGlow = false,
+  { src, poster, autoPlay = true, active = true, fadeIn = true, videoElementRef, measurementKey = src, diagnosticContext = {}, muted = false, loop = false, fit = "contain", volume = 1, rate = 1, ambientGlow = false, balanceVolume = false,
     onTime, onDuration, onSize, onPlay, onPlaying, onPause, onWaiting, onSeeked, onEnded, onError, onClearError, onClick, className = "" },
   ref,
 ) {
@@ -131,6 +134,13 @@ const VideoSurface = forwardRef<VideoHandle, Props>(function VideoSurface(
     isActive: () => activity.isActive(),
     isPlayWanted: () => activity.isPlayWanted(),
   }), []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    setBalanceVolume(video, balanceVolume);
+    return () => setBalanceVolume(video, false);
+  }, [balanceVolume]);
 
   useEffect(() => {
     const video = videoRef.current;

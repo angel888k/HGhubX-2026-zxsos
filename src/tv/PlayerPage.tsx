@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, fmtTime } from "../shared/api/api";
 import VideoSurface, { type VideoHandle } from "../features/playback/VideoSurface";
 import { useContentPreferences } from "../shared/model/contentPreferences";
+import { usePlaybackPreferences } from "./preferences";
 import type { Detail } from "../shared/api/types";
 import type { TvContent, TvProgress } from "./model";
 import { useRemoteScope } from "./remote";
@@ -33,6 +34,7 @@ const finiteSeconds = (value: number | undefined) => Number.isFinite(value) ? Ma
 
 export default function PlayerPage({ content, sourceKey, part: initialPart, resumeSeconds = 0, favorite, rate: initialRate = 1, quality: initialQuality = "main", autoNext = true, onFavorite, onProgress, onBack, onMetadata, onPartChange, onPreferencesChange }: Props) {
   const preferences = useContentPreferences();
+  const playbackPreferences = usePlaybackPreferences();
   const key = `${content.kind}:${content.id}`;
   const [part, setPart] = useState(initialPart);
   const [prepared, setPrepared] = useState<Prepared | null>(null);
@@ -314,7 +316,7 @@ export default function PlayerPage({ content, sourceKey, part: initialPart, resu
   const nextExists = loaded ? loaded.parts.findIndex(candidate => candidate.id === part) < loaded.parts.length - 1 : false;
 
   return <section className="tv-player" data-tv-modal={`player:${key}`} aria-label={`${item.title}播放器`}>
-    {!blocked && loaded && mediaSrc && <VideoSurface key={session} ref={video} src={mediaSrc} active={foreground} autoPlay={wanted.current} rate={rate} measurementKey={session}
+    {!blocked && loaded && mediaSrc && <VideoSurface key={session} ref={video} src={mediaSrc} active={foreground} autoPlay={wanted.current} rate={rate} balanceVolume={playbackPreferences.balanceVolume} measurementKey={session}
       diagnosticContext={{ view: "tv_player", content_kind: content.kind, content_id: content.id, part, playback_session: loaded.serial }} className="tv-player-surface"
       onDuration={value => restore(session, value)}
       onTime={value => {

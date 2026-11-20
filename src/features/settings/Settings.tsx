@@ -14,7 +14,7 @@ import { copyPlaybackLog, initPlaybackLog, setPlaybackLog, tracePlayback, usePla
 import { formatNetDiag, shortVerdict } from "../../shared/diagnostics/netDiagReport";
 import { copyText } from "../../shared/lib/clipboard";
 import { Loader } from "../../shared/ui/ios/effects";
-import { IBack, IBoltF, IBroom, IChevR, ICompress, IHeart, IHome, IInfo, ILink, ILockF, IMoon, IRefresh, ISun, IVolMute } from "../../shared/ui/icons";
+import { IBack, IBoltF, IBroom, IChevR, ICompress, IHeart, IHome, IInfo, ILink, ILockF, IMoon, IRefresh, ISun, IVol, IVolMute } from "../../shared/ui/icons";
 
 const SETTING_GROUPS = ["外观", "播放", "内容偏好", "本地数据", "网络", "播放诊断", "其他"] as const;
 type SettingGroup = typeof SETTING_GROUPS[number];
@@ -22,7 +22,7 @@ type SettingGroup = typeof SETTING_GROUPS[number];
 /* 独立设置页：线路 / 外观 / 播放 / 本地数据 / 清理缓存 / 网络诊断 / 关于
    入口：Windows 侧栏「设置」、Android「我的」右上角齿轮 */
 export default function Settings({ onBack, initialSection }: { onBack: () => void; wide: boolean; initialSection?: "内容偏好" }) {
-  const { theme, themePreference, setTheme, favs, history, muteOnStartup, setMuteOnStartup, preferHevc, setPreferHevc, fsIdleSecs, setFsIdleSecs, startupTab, setStartupTab, ambientGlow, setAmbientGlow, strictSecurity, strictSecurityReady, securityPending, cliRelaxed, setStrictSecurity, toast } = useStore();
+  const { theme, themePreference, setTheme, favs, history, muteOnStartup, setMuteOnStartup, preferHevc, setPreferHevc, balanceVolume, setBalanceVolume, fsIdleSecs, setFsIdleSecs, startupTab, setStartupTab, ambientGlow, setAmbientGlow, strictSecurity, strictSecurityReady, securityPending, cliRelaxed, setStrictSecurity, toast } = useStore();
   const [about, setAbout] = useState(false);
   const [agreementOpen, setAgreementOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
@@ -172,6 +172,14 @@ export default function Settings({ onBack, initialSection }: { onBack: () => voi
                 <div className="text-[12px] text-mut">画面颜色会轻微扩散到黑边，关闭可省电</div>
               </div>
               <Toggle desktop on={ambientGlow} onChange={setAmbientGlow} label="微光效果" />
+            </div>
+            <div className="ios-settings-row">
+              <span className="ios-setting-icon"><IVol size={16} /></span>
+              <div className="flex-1 min-w-0">
+                <div className="text-[14px] text-on">平衡音量</div>
+                <div className="text-[12px] text-mut">自动压低突然变大的音效，让台词更稳；音乐和现场内容可能被轻微压缩</div>
+              </div>
+              <Toggle desktop on={balanceVolume} onChange={setBalanceVolume} label="平衡音量" />
             </div>
             {isMobile && <div className="ios-settings-row flex-wrap">
               <span className="ios-setting-icon"><ICompress size={16} /></span>
