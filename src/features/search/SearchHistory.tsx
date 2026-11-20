@@ -96,7 +96,7 @@ export function SearchHistory({ items, onPick, onRemove, onClear, className = ""
           <Button onClick={clearAll} className="ios-history-action -mr-2">清空</Button>
         )}
       </div>
-      <div className="flex flex-wrap gap-2 mt-2.5">
+      <div className={editing ? "flex flex-wrap gap-3 mt-2.5" : "flex flex-wrap gap-2 mt-2.5"}>
         {items.map((term) => (
           <Button
             key={term}
