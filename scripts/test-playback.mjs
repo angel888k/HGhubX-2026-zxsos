@@ -299,13 +299,14 @@ async function portraitFitChecks(page) {
   // Rotated landscape fullscreen: the clean-mode lock and the shutdown unlock
   // must occupy the same stage-local anchor even when the phone has a bottom
   // safe-area inset. The rotated stage maps --sab to its right edge.
+  // #177 移除了悬浮「横屏」胶囊；横屏源改由右下角「全屏」按钮进入旋转舞台（enterFs(landscapeVideo)）。
   await page.locator(".player-root").evaluate(el => {
     el.style.setProperty("--sab", "34px");
     el.style.setProperty("--sar", "0px");
     el.style.setProperty("--sal", "0px");
     el.style.setProperty("--sat", "44px");
   });
-  await page.getByRole("button", { name: "横屏", exact: true }).click();
+  await page.getByRole("button", { name: "全屏", exact: true }).click();
   await page.waitForFunction(() => document.querySelector(".player-root")?.classList.contains("fs-landscape"));
   await page.waitForTimeout(250);
   const qualityBox = await page.locator(".feed-current-quality").boundingBox();
