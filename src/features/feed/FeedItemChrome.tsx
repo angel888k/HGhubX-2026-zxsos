@@ -4,7 +4,7 @@ import { Loader } from "../../shared/ui/ios/effects";
 import { fmt, fmtTime } from "../../shared/api/api";
 import type { Post } from "../../shared/api/types";
 import type { Toast } from "../../shared/model/store";
-import { PlaybackProgress, type PlaybackClock } from "../playback";
+import { PlaybackProgress, playbackLockRightInset, type PlaybackClock } from "../playback";
 import {
   IBack, IChevR, IChevronDown, IChevronUp, ICommentF, IExpand, IFileText,
   IHeart, IHeartF, IList, ILockF, IMore, IPlayF, IStar, IStarF, IVertSwap, IVol, IVolMute,
@@ -30,6 +30,7 @@ type Props = {
   isDesktop: boolean;
   fs: boolean;
   clean: boolean;
+  rotated: boolean;
   mode: "home" | "context";
   kind: "video" | "post";
   title: string;
@@ -86,7 +87,7 @@ type Props = {
 };
 
 export default function FeedItemChrome({
-  isActive, isDesktop, fs, clean, mode, kind, title, index, effectiveLength, bottomInset,
+  isActive, isDesktop, fs, clean, rotated, mode, kind, title, index, effectiveLength, bottomInset,
   curEp, duration, meta, post, hevcUrl, preferHevc, setPreferHevc,
   landscapeVideo, capsuleOn, zoom, setZoom, portraitFit, setPortraitFit,
   liked, collected, likePending, collectPending, heartBurst, likeCount, collectCount,
@@ -134,7 +135,8 @@ export default function FeedItemChrome({
         </span>
       )}
       {!isDesktop && kind === "video" && clean && (
-        <Button aria-label="屏幕锁定" onClick={onLock} className="mobile-clean-lock">
+        <Button aria-label="屏幕锁定" onClick={onLock} className="mobile-clean-lock"
+          style={{ right: playbackLockRightInset(rotated, fs) }}>
           <ILockF size={19} />
         </Button>
       )}
