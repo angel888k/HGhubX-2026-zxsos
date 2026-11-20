@@ -4,6 +4,7 @@ import type { Toast } from "../../shared/model/store";
 import { createHoldSpeed, getHoldPoint, getHoldZone, isInsideHoldTarget, shiftHoldSpeed, HOLD_DELAY_MS, type HoldRect, type HoldRotation, type HoldSpeed, type HoldZone } from "./mobileHold";
 import { resolveFullscreenEpisodeSwipe } from "./fullscreenEpisodeSwipe";
 import type { FeedPanel, PinchState } from "./useFeedViewport";
+import { tr } from "../../shared/i18n";
 
 type Args = {
   boxRef: RefObject<HTMLDivElement | null>;
@@ -230,7 +231,7 @@ export function useFeedTouchGestures({
       setHoldSlow(false);
       if (releasedOnLock) {
         setSpeedLock(g.speed?.rate || 2);
-        toast(`已锁定 ${g.speed?.rate || 2}x 倍速 · 点顶部标签解除`, "info");
+        toast(tr("已锁定 {0}x 倍速 · 点顶部标签解除", g.speed?.rate || 2), "info");
       }
       lockArmedRef.current = false;
       setLockArmed(false);
@@ -266,7 +267,7 @@ export function useFeedTouchGestures({
           if (result) {
             const want = result.target;
             setEpMap((m) => ({ ...m, [curId]: want }));
-            toast(`第 ${want}集${total ? ` / ${total}` : ""}`, "info", "episode");
+            toast(tr("第 {0}集{1}", want, total ? ` / ${total}` : ""), "info", "episode");
             try { navigator.vibrate?.(12); } catch { /* ignore */ }
             return;
           }
@@ -275,7 +276,7 @@ export function useFeedTouchGestures({
         const want = dir === 1 ? (total > 1 && ep < total ? ep + 1 : 0) : (ep > 1 ? ep - 1 : 0);
         if (swipeEp && kind === "video" && want) {
           setEpMap((m) => ({ ...m, [curId]: want }));
-          toast(`第 ${want}集${total ? ` / ${total}` : ""}`, "info", "episode");
+          toast(tr("第 {0}集{1}", want, total ? ` / ${total}` : ""), "info", "episode");
           try { navigator.vibrate?.(12); } catch { /* ignore */ }
           return;
         }

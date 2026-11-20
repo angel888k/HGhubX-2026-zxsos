@@ -13,6 +13,7 @@ import { PanelSwipeArea } from "./PanelSwipeArea";
 import {
   IBoltF, IClose, ICompress, IPauseF, IPlayF, ISearch,
 } from "../../shared/ui/icons";
+import { tr } from "../../shared/i18n";
 
 const VideoDetailsPanel = lazy(() => import("./VideoDetailsPanel"));
 const EpisodesPanel = lazy(() => import("./Panels").then(m => ({ default: m.EpisodesPanel })));
@@ -118,7 +119,7 @@ export function FeedPlayerShellChrome({
       related={related} following={follows.includes(meta.authorId)} followPending={followPending}
       onFollow={() => void onFollow()} onTag={openTag} onBlockTag={tag => openTagMenu([tag])} onClose={onClose}
       onAuthor={() => { if (meta.authorId > 0) { closePanels(); pushPage({ kind: "user", id: meta.authorId, name: meta.author }); } }}
-      onRelated={(video, visible) => { closePanels(); pushPage({ kind: "feed", videoIds: visible.map(item => item.id), index: visible.findIndex(item => item.id === video.id), title: "相关推荐" }); }} />
+      onRelated={(video, visible) => { closePanels(); pushPage({ kind: "feed", videoIds: visible.map(item => item.id), index: visible.findIndex(item => item.id === video.id), title: tr("相关推荐") }); }} />
   );
 
   return (
@@ -134,9 +135,9 @@ export function FeedPlayerShellChrome({
           seekKey={playKey}
           dockInset={panel ? 372 : 0}
           nextDisabled={!episodes.some((e) => e.ep_num === curEp + 1) && index >= effectiveLength - 1}
-          nextTitle={episodes.some((e) => e.ep_num === curEp + 1) ? (swipeEp ? "下一集 ↓" : "下一集") : "下一部 ↓"}
+          nextTitle={episodes.some((e) => e.ep_num === curEp + 1) ? (swipeEp ? tr("下一集 ↓") : tr("下一集")) : tr("下一部 ↓")}
           swipeEp={swipeEp}
-          onToggleSwipe={() => { const next = !swipeEp; setSwipeEp(next); toast(next ? "上下划切集已开启" : "上下划切集已关闭", "info", "swipe-toggle"); }}
+          onToggleSwipe={() => { const next = !swipeEp; setSwipeEp(next); toast(next ? tr("上下划切集已开启") : tr("上下划切集已关闭"), "info", "swipe-toggle"); }}
           onToggle={() => videoRef.current?.toggle()}
           onSeek={(t, source) => { videoRef.current?.seek(t, source); playbackClock.publish(t); }}
           onSeekInteraction={(phase, input, target, pointerTarget) => videoRef.current?.trace(`seek.input.${phase}`, { input, target, pointer_target: pointerTarget })}
@@ -160,14 +161,14 @@ export function FeedPlayerShellChrome({
         <Button
           ref={speedLockTargetRef}
           onClick={() => {
-            if (speedLock) { setSpeedLock(0); toast("已解除倍速锁定", "info"); }
+            if (speedLock) { setSpeedLock(0); toast(tr("已解除倍速锁定"), "info"); }
             else if (rate !== 1 && !holdSpeed) setRate(1);
           }}
           className="absolute left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-3.5 h-8 rounded-full text-[13px] font-semibold whitespace-nowrap pressable"
           style={{ top: rotated ? 14 : "calc(var(--sat, 0px) + 54px)", background: "rgba(0,0,0,.36)", color: lockArmed || speedLock ? "rgba(255,255,255,.96)" : "rgba(255,255,255,.88)" }}>
           <IBoltF size={13} />
           {/* 两态文案等宽（6 字），避免命中矩形在手指停留时伸缩造成 armed 抖动 */}
-          {effRate}x {holdSpeed ? (lockArmed ? "松手即可锁定" : "移入此处锁定") : speedLock ? "已锁定 · 点按解除" : holdSlow ? "减速中 · 松开恢复" : "倍速"}
+          {effRate}x {holdSpeed ? (lockArmed ? tr("松手即可锁定") : tr("移入此处锁定")) : speedLock ? tr("已锁定 · 点按解除") : holdSlow ? tr("减速中 · 松开恢复") : tr("倍速")}
         </Button>
       )}
 
@@ -226,13 +227,13 @@ export function FeedPlayerShellChrome({
               paddingLeft: fsSafeLeft,
               paddingRight: fsSafeRight,
             }}>
-            <Button onClick={() => videoRef.current?.toggle()} aria-label={paused ? "播放" : "暂停"}
+            <Button onClick={() => videoRef.current?.toggle()} aria-label={paused ? tr("播放") : tr("暂停")}
               className="hg-chip shrink-0 w-9 h-9 rounded-full flex items-center justify-center pressable">
               {paused ? <IPlayF size={18} /> : <IPauseF size={17} />}
             </Button>
             <PlaybackTime clock={playbackClock} duration={duration} padMinutes className="mobile-fs-time shrink-0 text-[12px] font-semibold hg-ink-2 tabular-nums" />
             <Button
-              aria-label={speedLock ? "解除倍速锁定" : `切换倍速，当前 ${effRate} 倍`}
+              aria-label={speedLock ? tr("解除倍速锁定") : tr("切换倍速，当前 {0} 倍", effRate)}
               onClick={() => {
                 if (speedLock) { setSpeedLock(0); return; }
                 const seq = [1, 1.25, 1.5, 2];
@@ -242,7 +243,7 @@ export function FeedPlayerShellChrome({
               className={`ml-auto shrink-0 flex items-center gap-1 px-2.5 h-8 rounded-full text-[13px] font-bold pressable ${effRate !== 1 ? "bg-white text-[#191919]" : "hg-chip hg-ink-2"}`}>
               <IBoltF size={12} />{effRate}x
             </Button>
-            <Button onClick={exitFs} aria-label="退出全屏"
+            <Button onClick={exitFs} aria-label={tr("退出全屏")}
               className="mobile-fs-exit hg-chip shrink-0 w-8 h-8 rounded-full flex items-center justify-center pressable">
               <ICompress size={16} />
             </Button>
@@ -265,7 +266,7 @@ export function FeedPlayerShellChrome({
         </div>
       ) : (
         <>
-          <Sheet open={active && panel === "more"} label="播放设置" z="playback-settings-overlay" onClose={() => setPanel(null)}>
+          <Sheet open={active && panel === "more"} label={tr("播放设置")} z="playback-settings-overlay" onClose={() => setPanel(null)}>
             <PlaybackSettingsPanel
               rate={rate} onRate={(value) => { setRate(value); videoRef.current?.rate(value); }}
               preferHevc={preferHevc} onPreferHevc={setPreferHevc}
@@ -295,16 +296,16 @@ export function FeedPlayerShellChrome({
             </div>
           </Sheet>
 
-          <Sheet open={active && (panel === "detail" || panel === "episodes")} label={panel === "detail" ? "视频详情" : "选集"} onClose={() => setPanel(null)}>
+          <Sheet open={active && (panel === "detail" || panel === "episodes")} label={panel === "detail" ? tr("视频详情") : tr("选集")} onClose={() => setPanel(null)}>
             <div className="video-details-sheet">
               {/* 双栏抽屉：详情 / 选集 */}
               <div className="shrink-0 flex items-center gap-2 px-4 pb-2">
-                <SegmentedControl className="flex-1" aria-label="剧集面板" activeIndex={panel === "detail" ? 0 : 1}>
-                  {([["detail", "详情"], ["episodes", "选集"]] as const).map(([k, l]) => (
+                <SegmentedControl className="flex-1" aria-label={tr("剧集面板")} activeIndex={panel === "detail" ? 0 : 1}>
+                  {([["detail", tr("详情")], ["episodes", tr("选集")]] as const).map(([k, l]) => (
                     <Button aria-pressed={panel === k} key={k} onClick={() => setPanel(k)}>{l}</Button>
                   ))}
                 </SegmentedControl>
-                <Button onClick={() => setPanel(null)} aria-label="关闭"
+                <Button onClick={() => setPanel(null)} aria-label={tr("关闭")}
                   className="ios-icon-button">
                   <IClose size={14} />
                 </Button>
@@ -348,10 +349,10 @@ export function FeedMobileTopTools({
         top: rotated ? 12 : "calc(var(--sat, 0px) + 6px)",
         right: rotated ? "calc(var(--sab, 0px) + 12px)" : "calc(var(--sar, 0px) + 12px)",
       }}>
-      {onSearch && !fs && <Button type="button" aria-label={searchLabel ?? "搜索"} onClick={onSearch} className="feed-context-search pressable">
-        <ISearch size={14} /><span>{searchLabel ?? "搜索"}</span>
+      {onSearch && !fs && <Button type="button" aria-label={searchLabel ?? tr("搜索")} onClick={onSearch} className="feed-context-search pressable">
+        <ISearch size={14} /><span>{searchLabel ?? tr("搜索")}</span>
       </Button>}
-      {currentQuality && <span className="feed-current-quality" aria-label={`当前清晰度：${currentQuality === "HD" ? "高清" : "标清"}`}>{currentQuality}</span>}
+      {currentQuality && <span className="feed-current-quality" aria-label={tr("当前清晰度：{0}", currentQuality === "HD" ? tr("高清") : tr("标清"))}>{currentQuality}</span>}
     </div>
   );
 }
