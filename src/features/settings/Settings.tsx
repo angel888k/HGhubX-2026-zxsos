@@ -197,14 +197,14 @@ export default function Settings({ onBack, initialSection }: { onBack: () => voi
               </div>
               <Toggle desktop on={ambientGlow} onChange={setAmbientGlow} label={tr("微光效果")} />
             </div>
-            <div className="ios-settings-row">
+            {isMobile && <div className="ios-settings-row">
               <span className="ios-setting-icon"><IVol size={16} /></span>
               <div className="flex-1 min-w-0">
                 <div className="text-[14px] text-on">{tr("平衡音量")}</div>
                 <div className="text-[12px] text-mut">{tr("自动压低突然变大的音效，让台词更稳；音乐和现场内容可能被轻微压缩")}</div>
               </div>
               <Toggle desktop on={balanceVolume} onChange={setBalanceVolume} label={tr("平衡音量")} />
-            </div>
+            </div>}
             {isMobile && <div className="ios-settings-row flex-wrap">
               <span className="ios-setting-icon"><ICompress size={16} /></span>
               <div className="flex-1 min-w-0">
