@@ -224,7 +224,15 @@ async function gestureChecks(page) {
   await page.waitForFunction(() => window.playerSeekFixture.logs.some(e => e.event === 'play.resolve' && e.data.video_id === 991 && e.data.episode === 3));
   assert.equal(await page.evaluate(() => window.playerSeekFixture.logs.some(e => e.event === 'play.resolve' && e.data.video_id === 992)), false,
     'Fast episode swipes must stay on the same video');
-  return { singleTapMs, bottomOnlyScrub: true, fastSwipeEpisodes: [2, 3], sameVideo: true };
+  const swipeToggle = page.locator('button.mobile-playback-quick[aria-label*="上下划切集"]').first();
+  for (let i = 0; i < 3; i++) {
+    await swipeToggle.click();
+    await page.waitForTimeout(80);
+  }
+  await page.waitForFunction(() => document.querySelectorAll(".a-toast").length === 1);
+  assert.equal(await page.locator(".a-toast").count(), 1, "Rapid swipe-toggle taps must keep one toast card");
+  assert.match(await page.locator(".a-toast").innerText(), /上下划切集/);
+  return { singleTapMs, bottomOnlyScrub: true, fastSwipeEpisodes: [2, 3], sameVideo: true, swipeToggleToastCards: 1 };
 }
 
 // issue #142 回归：手机竖屏视口 + 真实竖屏源（360x640，高>宽）。
