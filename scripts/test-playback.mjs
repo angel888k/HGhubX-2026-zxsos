@@ -234,6 +234,12 @@ async function gestureChecks(page) {
 //   修复后：竖屏视频一律 "contain"（保留原始比例）→ 断言通过。
 // 第二段用横屏源验证「铺满/适应」切换链路未被修复破坏（该分支修复前后行为一致）。
 async function portraitFitChecks(page) {
+  // The mobile fullscreen transition asks Tauri to lock the screen orientation.
+  // This scenario runs in Chromium, so provide only that bridge and keep the
+  // rest of the playback stack real.
+  await page.addInitScript(() => {
+    window.__TAURI_INTERNALS__ = { invoke: async () => null };
+  });
   const open = proxy => page.goto(`${report.ui}/tests/player-seek.html?diagnostics=1&portrait-fit=1&proxy=${encodeURIComponent(proxy)}`);
   // onSize 是原生媒体事件里的 React 更新；双 rAF 保证 setVsize 已提交到 DOM（帧同步，非任意 sleep）。
   const afterCommit = () => page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(() => done(undefined)))));
@@ -269,6 +275,54 @@ async function portraitFitChecks(page) {
   await page.waitForFunction(() => getComputedStyle(document.querySelector("video")).objectFit === "cover");
   await page.getByRole("button", { name: "适应", exact: true }).click();
   await page.waitForFunction(() => getComputedStyle(document.querySelector("video")).objectFit === "contain");
+  // PR #177 removes the floating fill/rotate controls, so this regression must
+  // enter fullscreen through the persistent bottom-dock control. Close its
+  // settings sheet first so the same case also runs after that PR lands.
+  const settingsDialog = page.getByRole("dialog", { name: "播放设置", exact: true });
+  if (await settingsDialog.count()) {
+    await settingsDialog.getByRole("button", { name: "关闭播放设置", exact: true }).click();
+    await settingsDialog.waitFor({ state: "hidden" });
+  }
+
+  // Rotated landscape fullscreen: the clean-mode lock and the shutdown unlock
+  // must occupy the same stage-local anchor even when the phone has a bottom
+  // safe-area inset. The rotated stage maps --sab to its right edge.
+  await page.locator(".player-root").evaluate(el => {
+    el.style.setProperty("--sab", "34px");
+    el.style.setProperty("--sar", "0px");
+    el.style.setProperty("--sal", "0px");
+    el.style.setProperty("--sat", "44px");
+  });
+  await page.getByRole("button", { name: "全屏", exact: true }).click();
+  await page.waitForFunction(() => document.querySelector(".player-root")?.classList.contains("fs-landscape"));
+  await page.waitForTimeout(250);
+  const qualityBox = await page.locator(".feed-current-quality").boundingBox();
+  assert(qualityBox, "Quality indicator must be visible before clean mode");
+  await page.evaluate(() => {
+    const surface = document.querySelector("[data-mobile-hold-target]");
+    const box = surface.getBoundingClientRect();
+    for (const type of ["pointerdown", "pointerup"]) surface.dispatchEvent(new PointerEvent(type, {
+      bubbles: true, pointerId: 93, pointerType: "touch", button: 0,
+      clientX: box.x + box.width / 2, clientY: box.y + box.height / 2,
+    }));
+  });
+  await page.waitForFunction(() => document.querySelector(".player-root")?.dataset.clean === "true");
+  const cleanLock = page.getByRole("button", { name: "屏幕锁定", exact: true });
+  await cleanLock.waitFor();
+  const cleanBox = await cleanLock.boundingBox();
+  await cleanLock.click();
+  const unlock = page.getByRole("button", { name: "解锁播放控制", exact: true });
+  await unlock.waitFor();
+  const unlockBox = await unlock.boundingBox();
+  assert(cleanBox && unlockBox, "Both the clean lock and unlock controls must be measurable");
+  const anchorDelta = Math.hypot(cleanBox.x - unlockBox.x, cleanBox.y - unlockBox.y);
+  assert(anchorDelta < 1, `Clean lock must keep the unlock anchor in rotated fullscreen (delta ${anchorDelta.toFixed(1)}px)`);
+  const center = box => ({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
+  const cleanCenter = center(cleanBox), qualityCenter = center(qualityBox);
+  // After the 90-degree stage rotation, stage Y is the upright X axis.
+  const qualityAlignDelta = Math.abs(cleanCenter.y - qualityCenter.y);
+  assert(qualityAlignDelta < 1, `Lock and quality indicator must share the upright right edge (delta ${qualityAlignDelta.toFixed(1)}px)`);
+  await unlock.click();
   return { viewport: "390x844", portrait_source: "360x640", portrait_object_fit: portrait.objectFit,
     landscape_default_fit: "contain", landscape_toggle: ["contain", "cover", "contain"] };
 }

@@ -3,6 +3,11 @@ import { useEffect, useState } from "react";
 import { registerOverlayBack } from "../../shared/lib/back";
 import { ILockF } from "../../shared/ui/icons";
 
+/** Shared anchor for the lock and unlock affordances, including the rotated landscape stage. */
+export function playbackLockRightInset(rotated = false, immersive = false) {
+  return rotated ? "calc(var(--sab, 0px) + 12px)" : immersive ? "calc(var(--sar, 0px) + 12px)" : "12px";
+}
+
 /** Shield pointer input, hardware back, and playback/shell shortcuts without pausing the media. */
 export default function PlaybackLock({
   active, onUnlock, rotated = false, immersive = false,
@@ -42,17 +47,13 @@ export default function PlaybackLock({
     };
   }, [active]);
 
-  const rightInset = rotated
-    ? "calc(var(--sab, 0px) + 12px)"
-    : immersive
-      ? "calc(var(--sar, 0px) + 12px)"
-      : undefined;
+  const rightInset = playbackLockRightInset(rotated, immersive);
 
   return <div data-playback-lock-shield className="absolute inset-0 z-50" style={{ touchAction: "none" }}
     onPointerDown={e => { e.stopPropagation(); setNudge(true); }} onClick={e => e.stopPropagation()} onWheel={e => e.stopPropagation()}>
     <Button type="button" data-playback-unlock aria-label="解锁播放控制" title="解锁播放控制" aria-pressed
-      style={rightInset ? { right: rightInset } : undefined}
-      onClick={onUnlock} className={`playback-unlock absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center ${nudge ? "is-nudged" : ""}`}>
+      style={{ right: rightInset }}
+      onClick={onUnlock} className={`playback-unlock absolute top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center ${nudge ? "is-nudged" : ""}`}>
       <ILockF size={19} />
     </Button>
   </div>;
