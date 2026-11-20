@@ -295,14 +295,18 @@ async function portraitFitChecks(page) {
   await page.waitForFunction(() => getComputedStyle(document.querySelector("video")).objectFit === "cover");
   await page.getByRole("button", { name: "适应", exact: true }).click();
   await page.waitForFunction(() => getComputedStyle(document.querySelector("video")).objectFit === "contain");
-  // #177 的铺满/适应切换在播放设置面板内完成；先关面板，避免遮挡后续「全屏」按钮。
-  await page.getByRole("button", { name: "关闭播放设置", exact: true }).click();
-  await page.getByRole("dialog", { name: "播放设置" }).waitFor({ state: "detached" });
+  // PR #177 removes the floating fill/rotate controls, so this regression must
+  // enter fullscreen through the persistent bottom-dock control. Close its
+  // settings sheet first so the same case also runs after that PR lands.
+  const settingsDialog = page.getByRole("dialog", { name: "播放设置", exact: true });
+  if (await settingsDialog.count()) {
+    await settingsDialog.getByRole("button", { name: "关闭播放设置", exact: true }).click();
+    await settingsDialog.waitFor({ state: "hidden" });
+  }
 
   // Rotated landscape fullscreen: the clean-mode lock and the shutdown unlock
   // must occupy the same stage-local anchor even when the phone has a bottom
   // safe-area inset. The rotated stage maps --sab to its right edge.
-  // #177 移除了悬浮「横屏」胶囊；横屏源改由右下角「全屏」按钮进入旋转舞台（enterFs(landscapeVideo)）。
   await page.locator(".player-root").evaluate(el => {
     el.style.setProperty("--sab", "34px");
     el.style.setProperty("--sar", "0px");
