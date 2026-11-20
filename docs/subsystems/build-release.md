@@ -99,7 +99,9 @@ ad-hoc 签名都不应进入仓库或本机脚本输出。
    - `acceptance`：PR/推送 `main` 且 TV 相关路径变化（`src/tv/**`、`src/shared/**`、入口与样式、
      TV 测试/fixture、`tauri.tv.conf.json`、依赖清单、`tv.yml` 自身）时运行
      `node scripts/test-tv-remote.mjs`（真实 TV bootstrap/Worker/片库，mock IPC，13 场景）；
-     手动 `mode=acceptance` 可无条件运行。失败仍上传 `test-results/tv-remote/` 诊断，保留 7 天。
+     手动 `mode=acceptance` 可无条件运行。FFmpeg/浏览器解析与 `ci.yml` 的 `playback` 相同
+     （FFmpeg 缺失时沿用维护者指定镜像安装，失败不换源）。失败仍上传 `test-results/tv-remote/`
+     诊断，保留 7 天。
      不修改 TV 相关路径的 PR 不触发 TV 验收，TV 的偶发失败不再拖累标准版门禁。
    - `package`：`v*` tag 或手动 `mode=package` 触发；先 `cp tauri.tv.conf.json tauri.android.conf.json`，
      其余与标准版 Android 相同（`set-version.mjs`、SDK/NDK、`--split-per-abi`、keystore 签名、
@@ -165,7 +167,7 @@ node scripts/check-version-sync.mjs
 
 `make check` 不包含 smoke；需要浏览器用例时单独 `pnpm test:smoke`（含 `account-sync`；账号 fixture
 也可单独用 `node scripts/test-account-sync-empty-state.mjs` 运行）。`pnpm test:playback` 需要
-FFmpeg/Chromium（TV 验收也可本地 `node scripts/test-tv-remote.mjs`，只需 Chromium），
+FFmpeg/Chromium（TV 验收也可本地 `node scripts/test-tv-remote.mjs`，需 FFmpeg 与 Chromium），
 iOS 打包校验通过 `ci.yml`（`mode=package, platforms=ios`）在 macOS runner 执行，
 TV 验收与打包校验通过 `tv.yml`（`mode=acceptance` / `mode=package`）执行。
 报告里必须写清命令、版本/输入、字面结果和退出状态；没有运行的命令不能写成“已通过”。

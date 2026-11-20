@@ -94,15 +94,22 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Resolve pre-installed Chrome (or fallback to Playwright Chromium)
+      - name: Resolve pre-installed FFmpeg & Chrome
         run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo find /etc/apt/sources.list.d -maxdepth 1 -type f ! -name 'ubuntu.sources' -delete
+            if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then
+              sudo sed -i -E 's|^URIs:.*|URIs: https://mirrors.edge.kernel.org/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources
+            fi
+            sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+          fi
           if [ -x /usr/bin/google-chrome ]; then
             BROWSER="/usr/bin/google-chrome"
           else
             pnpm exec playwright-core install --with-deps chromium
             BROWSER="$(node --input-type=module -e "import { chromium } from 'playwright-core'; console.log(chromium.executablePath())")"
           fi
-          echo "Using browser: $BROWSER"
+          echo "Using browser: $BROWSER, ffmpeg: $(command -v ffmpeg)"
           echo "BROWSER_EXECUTABLE=$BROWSER" >> "$GITHUB_ENV"
       - name: Run TV acceptance
         run: node scripts/test-tv-remote.mjs
