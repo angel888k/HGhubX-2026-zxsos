@@ -325,7 +325,6 @@ async function episodeToastChecks(page) {
   return { deferredWhileLoading: true, host: "rotated-stage", text: (await toast.innerText()).trim() };
 }
 
-
 // Ambient glow is a sampled color wash behind the video. It must follow the
 // live setting, render on a readable source, and leave no layer when disabled.
 async function ambientGlowChecks(page) {
