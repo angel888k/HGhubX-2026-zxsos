@@ -927,6 +927,11 @@ const en: Record<string, string> = {
   "不限": "Any",
   "筛选": "Filter",
   "收藏筛选": "Favorite filters",
+  "画面增强": "Picture enhancement",
+  "AI 补充人物纹理和细节；强度越高越清晰，也更耗电": "AI restores face texture and detail; higher strength is sharper, but uses more battery",
+  "增强强度": "Enhancement strength",
+  "标准": "Standard",
+  "极强": "Extreme",
 };
 
 export default en;
