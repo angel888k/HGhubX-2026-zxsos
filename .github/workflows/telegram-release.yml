@@ -99,7 +99,11 @@ jobs:
               text = re.sub(r"\n{3,}", "\n\n", text).strip()
               return text
 
-          text = "<b>HGhubX " + name + " 已发布</b>\n\n" + md_to_html(body)
+          if name.startswith("HGhubX"):
+              header = name + " 已发布"
+          else:
+              header = "HGhubX " + name + " 已发布"
+          text = "<b>" + header + "</b>\n\n" + md_to_html(body)
           if url:
               text += '\n\n<a href="' + url + '">完整更新内容</a>'
           if len(text) > 4000:
@@ -133,7 +137,7 @@ jobs:
                            "media": "attach://f%d" % i}
                   if start == 0 and i == 0:
                       entry["caption"] = ("HGhubX %s 安装包（%d 个）"
-                                          % (name, len(files)))
+                                          % (tag, len(files)))
                   media.append(entry)
               args = ["curl", "-s", "-X", "POST",
                       "https://api.telegram.org/bot" + token + "/sendMediaGroup",
