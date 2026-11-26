@@ -26,7 +26,7 @@ jobs:
           elif [ -n "$EVENT_TAG" ]; then
             echo "tag=$EVENT_TAG" >> "$GITHUB_OUTPUT"
           else
-            echo "tag=$(gh release list --limit 1 --exclude-drafts --exclude-pre-releases --json tagName --jq '.[0].tagName')" >> "$GITHUB_OUTPUT"
+            echo "tag=$(gh release list --repo "${{ github.repository }}" --limit 1 --exclude-drafts --exclude-pre-releases --json tagName --jq '.[0].tagName')" >> "$GITHUB_OUTPUT"
           fi
 
       - name: 下载发版资产
@@ -40,6 +40,7 @@ jobs:
 
       - name: 发到 Telegram 群
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TAG: ${{ steps.tag.outputs.tag }}
@@ -85,6 +86,10 @@ jobs:
 
           for path in sorted(glob.glob("assets/*")):
               fname = os.path.basename(path)
+              size = os.path.getsize(path)
+              if size > 50 * 1024 * 1024:
+                  print(fname, "-> skipped: over 50 MB Bot API limit")
+                  continue
               res = subprocess.run([
                   "curl", "-s", "-X", "POST",
                   "https://api.telegram.org/bot" + token + "/sendDocument",
@@ -92,5 +97,9 @@ jobs:
                   "-F", "document=@" + path,
                   "-F", "caption=" + fname,
               ], capture_output=True, text=True, timeout=300)
-              print(fname, "->", res.stdout[:200])
+              try:
+                  ok = json.loads(res.stdout).get("ok")
+              except Exception:
+                  ok = None
+              print(fname, "-> sent:", ok)
           PY
