@@ -422,6 +422,7 @@ body { background:var(--motion-paper); }
 .a-rise { animation:motion-rise .42s var(--motion-spring) both; }
 .a-page-in,.win-page-in { animation:motion-page-in .4s var(--motion-spring) both; }
 .ios-tab-active { animation:motion-tab-in .34s var(--motion-spring) both; }
+.ios-tab-pane-swiping { animation:none!important; will-change:transform; }
 .a-toast { animation:motion-dialog-in .34s var(--motion-spring) both; }
 
 @media(prefers-reduced-motion:reduce) {
@@ -535,7 +536,8 @@ html.theme-light {
 .ios-history-chip-remove:active { background:var(--p-s4); color:var(--p-on); }
 
 .ios-dialog { overflow:auto; }
-.ios-mobile-nav .hg-drop { z-index:0; will-change:transform; transition:transform .34s var(--motion-spring); }
+.ios-mobile-nav .hg-drop { z-index:0; will-change:transform; transition:transform .28s cubic-bezier(.22,1,.36,1); }
+.ios-mobile-nav .hg-drop.is-dragging { transition:none; }
 .ios-mobile-nav .hg-drop>.ios-liquid-fill { position:relative; overflow:hidden; border-radius:inherit; }
 .ios-mobile-nav .hg-drop>.ios-liquid-fill::after { display:none; }
 .ios-mobile-nav .ios-mobile-nav-item[aria-current=page] { animation:none; }
