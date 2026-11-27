@@ -40,35 +40,36 @@ jobs:
         with:
           targets: aarch64-unknown-linux-ohos
 
-      - name: Restore HarmonyOS Command Line Tools 6.0.0.858 cache
+      - name: Restore HarmonyOS Command Line Tools 26.0.0.821 cache
         id: ohos-sdk-cache
         uses: actions/cache/restore@v4
         with:
           path: /home/runner/harmony
-          key: ohos-sdk-6.0.0.858-linux-amd64-v1
+          key: ohos-sdk-26.0.0.821-linux-amd64-v1
 
-      - name: Install HarmonyOS Command Line Tools 6.0.0.858
+      - name: Install HarmonyOS Command Line Tools 26.0.0.821
         if: steps.ohos-sdk-cache.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
           work="$(mktemp -d)"
           trap 'rm -rf "$work"' EXIT
-          base="https://github.com/ErBWs/ohos-sdk/releases/download/6.0.0.858/ohos-sdk-linux-amd64.tar.gz"
+          base="https://github.com/ErBWs/ohos-sdk/releases/download/26.0.0.821/ohos-sdk-linux-amd64.tar.gz"
           curl --fail --location --retry 3 "$base.aa" -o "$work/sdk.aa"
           curl --fail --location --retry 3 "$base.ab" -o "$work/sdk.ab"
+          cat "$work/sdk.aa" "$work/sdk.ab" > "$work/ohos-sdk-linux-amd64.tar.gz"
+          rm -f "$work/sdk.aa" "$work/sdk.ab"
           printf '%s  %s\n' \
-            ce8e66b9b4a8c0f492e348595173cbccd685ed029e33eab4097d6affc184b4de "$work/sdk.aa" \
-            785590e57b730333fdc9b71167dd7a32cb9341d88a7625704960b52c6dc33a35 "$work/sdk.ab" \
+            0cbdf7ac5c1be1e42694d448ffaee0c0be0ba9a948197e2bc5b61ca5bdc481f2 "$work/ohos-sdk-linux-amd64.tar.gz" \
             | sha256sum -c -
           mkdir -p "$HARMONY_TOOLS_DIR"
-          cat "$work/sdk.aa" "$work/sdk.ab" | tar -xz -C "$HARMONY_TOOLS_DIR"
+          tar -xzf "$work/ohos-sdk-linux-amd64.tar.gz" -C "$HARMONY_TOOLS_DIR"
 
       - name: Save HarmonyOS SDK cache
         if: steps.ohos-sdk-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: /home/runner/harmony
-          key: ohos-sdk-6.0.0.858-linux-amd64-v1
+          key: ohos-sdk-26.0.0.821-linux-amd64-v1
 
       - name: Restore OHOS Tauri CLI and ohrs cache
         id: ohos-tools-cache
@@ -150,21 +151,22 @@ jobs:
           build_rc=$?
           set -e
           echo "cargo tauri ohos build exited with: $build_rc"
-          hap_path="$ROOT/src-tauri/gen/ohos/entry/build/default/outputs/default/entry-default-unsigned.hap"
+          hap_path="$(find "$ROOT/src-tauri/gen/ohos" -name "*.hap" 2>/dev/null | head -n 1 || true)"
           so_path="$(find "$ROOT/src-tauri/gen/ohos" "$ROOT/src-tauri/target" -name "libhghubx_lib.so" 2>/dev/null | head -n 1 || true)"
           if [ -z "$so_path" ]; then
             echo "Rust cdylib libhghubx_lib.so was not produced; failing early."
             exit "${build_rc:-1}"
           fi
-          if [ ! -f "$hap_path" ]; then
+          if [ -z "$hap_path" ]; then
             echo "libhghubx_lib.so built ($so_path), trying direct ohpm + hvigorw assembly..."
             cd "$ROOT/src-tauri/gen/ohos"
             ohpm install
             hvigorw clean --no-daemon
-            hvigorw assembleHap --no-daemon --stacktrace
+            hvigorw assembleHap -p module=entry_mobile@default --no-daemon --stacktrace
+            hap_path="$(find "$ROOT/src-tauri/gen/ohos" -name "*.hap" 2>/dev/null | head -n 1 || true)"
           fi
           find "$ROOT/src-tauri/gen/ohos" -name "*.hap" -ls
-          test -f "$hap_path"
+          test -n "$hap_path" && test -f "$hap_path"
           unzip -l "$hap_path" | grep -E "libhghubx_lib\.so|module\.json|ets/modules\.abc"
 
       - name: Upload unsigned HAP artifact
