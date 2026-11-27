@@ -40,9 +40,9 @@ jobs:
         with:
           targets: aarch64-unknown-linux-ohos
 
-      - name: Cache HarmonyOS Command Line Tools 6.0.0.858
+      - name: Restore HarmonyOS Command Line Tools 6.0.0.858 cache
         id: ohos-sdk-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: /home/runner/harmony
           key: ohos-sdk-6.0.0.858-linux-amd64-v1
@@ -63,9 +63,16 @@ jobs:
           mkdir -p "$HARMONY_TOOLS_DIR"
           cat "$work/sdk.aa" "$work/sdk.ab" | tar -xz -C "$HARMONY_TOOLS_DIR"
 
-      - name: Cache OHOS Tauri CLI and ohrs
+      - name: Save HarmonyOS SDK cache
+        if: steps.ohos-sdk-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: /home/runner/harmony
+          key: ohos-sdk-6.0.0.858-linux-amd64-v1
+
+      - name: Restore OHOS Tauri CLI and ohrs cache
         id: ohos-tools-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: /home/runner/.ohos-tools
           key: ohos-tools-richerfu-00c8756-ohrs-1.5.0-v1
@@ -82,6 +89,13 @@ jobs:
             --rev 00c8756 \
             --root /home/runner/.ohos-tools \
             --no-default-features --features native-tls
+
+      - name: Save OHOS Tauri CLI and ohrs cache
+        if: steps.ohos-tools-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: /home/runner/.ohos-tools
+          key: ohos-tools-richerfu-00c8756-ohrs-1.5.0-v1
 
       - uses: swatinem/rust-cache@v2.9.3
         with:
@@ -137,8 +151,13 @@ jobs:
           set -e
           echo "cargo tauri ohos build exited with: $build_rc"
           hap_path="$ROOT/src-tauri/gen/ohos/entry/build/default/outputs/default/entry-default-unsigned.hap"
+          so_path="$(find "$ROOT/src-tauri/gen/ohos" "$ROOT/src-tauri/target" -name "libhghubx_lib.so" 2>/dev/null | head -n 1 || true)"
+          if [ -z "$so_path" ]; then
+            echo "Rust cdylib libhghubx_lib.so was not produced; failing early."
+            exit "${build_rc:-1}"
+          fi
           if [ ! -f "$hap_path" ]; then
-            echo "HAP not found at default path after tauri ohos build; trying direct ohpm + hvigorw assembly..."
+            echo "libhghubx_lib.so built ($so_path), trying direct ohpm + hvigorw assembly..."
             cd "$ROOT/src-tauri/gen/ohos"
             ohpm install
             hvigorw clean --no-daemon

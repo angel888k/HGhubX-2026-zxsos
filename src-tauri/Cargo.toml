@@ -103,6 +103,7 @@ rquickjs = { version = "0.14", features = ["bindgen"] }
 [target.'cfg(target_env = "ohos")'.dependencies]
 napi-ohos = "1.2"
 napi-derive-ohos = "1.2"
+ohos-window-manager-binding = "=0.1.2"
 openharmony-ability = { git = "https://github.com/harmony-contrib/openharmony-ability", branch = "codex/complete-platform-capabilities" }
 
 [profile.release]
