@@ -26,9 +26,13 @@ use response::{apply_byte_range, respond, segment_response, PROXIED_IMAGE_CACHE_
 #[cfg(any(target_os = "windows", target_os = "android"))]
 pub const LOCAL_ORIGIN: &str = "http://hg.localhost";
 /// Linux 走 loopback HTTP：WebKitGTK 的播放器是 GStreamer，它拿不到自定义 scheme。
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(target_env = "ohos")))]
 pub const LOCAL_ORIGIN: &str = crate::linux_http::ORIGIN;
-#[cfg(not(any(target_os = "windows", target_os = "android", target_os = "linux")))]
+#[cfg(not(any(
+    target_os = "windows",
+    target_os = "android",
+    all(target_os = "linux", not(target_env = "ohos"))
+)))]
 pub const LOCAL_ORIGIN: &str = "hg://localhost";
 
 /// 清空封面 / 播放列表 / Key / 分片内存缓存

@@ -134,7 +134,7 @@ fn system_proxy_fingerprint() -> u64 {
         name.hash(&mut hash);
         std::env::var_os(name).hash(&mut hash);
     }
-    #[cfg(target_os = "linux")]
+    #[cfg(all(target_os = "linux", not(target_env = "ohos")))]
     system_explicit_proxy().hash(&mut hash);
     #[cfg(any(target_os = "macos", target_os = "ios"))]
     format!("{:?}", hyper_util::client::proxy::matcher::Matcher::from_system()).hash(&mut hash);

@@ -7,14 +7,14 @@ use super::hls::rewrite_playlist;
 // Linux can selectively clear WebKit's durable cache, so proxied media must not
 // regrow it without bound. Other platforms lack that safe clearing path here;
 // keep the original WebKit disk-cache fallback for native HLS and seeks.
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(target_env = "ohos")))]
 pub(super) const PROXIED_MEDIA_CACHE_CONTROL: &str = "no-store";
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(all(target_os = "linux", not(target_env = "ohos"))))]
 pub(super) const PROXIED_MEDIA_CACHE_CONTROL: &str = "public, max-age=3600";
 
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(target_env = "ohos")))]
 pub(super) const PROXIED_IMAGE_CACHE_CONTROL: &str = "no-store";
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(all(target_os = "linux", not(target_env = "ohos"))))]
 pub(super) const PROXIED_IMAGE_CACHE_CONTROL: &str = "public, max-age=86400";
 
 /* ───────────────────────── 协议响应 ───────────────────────── */
@@ -277,12 +277,12 @@ mod tests {
 
     #[test]
     fn platform_cache_policy_matches_selective_clear_support() {
-        #[cfg(target_os = "linux")]
+        #[cfg(all(target_os = "linux", not(target_env = "ohos")))]
         {
             assert_eq!(PROXIED_MEDIA_CACHE_CONTROL, "no-store");
             assert_eq!(PROXIED_IMAGE_CACHE_CONTROL, "no-store");
         }
-        #[cfg(not(target_os = "linux"))]
+        #[cfg(not(all(target_os = "linux", not(target_env = "ohos"))))]
         {
             assert_eq!(PROXIED_MEDIA_CACHE_CONTROL, "public, max-age=3600");
             assert_eq!(PROXIED_IMAGE_CACHE_CONTROL, "public, max-age=86400");

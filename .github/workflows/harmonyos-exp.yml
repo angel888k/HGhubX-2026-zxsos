@@ -1,0 +1,156 @@
+name: HarmonyOS Experimental Build
+
+on:
+  push:
+    branches: [exp/harmonyos-ci]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: harmonyos-exp-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  HARMONY_TOOLS_DIR: /home/runner/harmony
+  DEVECO_SDK_HOME: /home/runner/harmony/command-line-tools/sdk
+  OHOS_HOME: /home/runner/harmony/command-line-tools/sdk/default/openharmony
+  OHOS_NDK_HOME: /home/runner/harmony/command-line-tools/sdk/default/openharmony
+
+jobs:
+  build-ohos:
+    name: Build HarmonyOS unsigned HAP (aarch64)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup-node-pnpm
+
+      - name: Install native build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build clang libclang-dev pkg-config libssl-dev \
+            default-jdk-headless unzip zip jq
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-ohos
+
+      - name: Cache HarmonyOS Command Line Tools 6.0.0.858
+        id: ohos-sdk-cache
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/harmony
+          key: ohos-sdk-6.0.0.858-linux-amd64-v1
+
+      - name: Install HarmonyOS Command Line Tools 6.0.0.858
+        if: steps.ohos-sdk-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          work="$(mktemp -d)"
+          trap 'rm -rf "$work"' EXIT
+          base="https://github.com/ErBWs/ohos-sdk/releases/download/6.0.0.858/ohos-sdk-linux-amd64.tar.gz"
+          curl --fail --location --retry 3 "$base.aa" -o "$work/sdk.aa"
+          curl --fail --location --retry 3 "$base.ab" -o "$work/sdk.ab"
+          printf '%s  %s\n' \
+            ce8e66b9b4a8c0f492e348595173cbccd685ed029e33eab4097d6affc184b4de "$work/sdk.aa" \
+            785590e57b730333fdc9b71167dd7a32cb9341d88a7625704960b52c6dc33a35 "$work/sdk.ab" \
+            | sha256sum -c -
+          mkdir -p "$HARMONY_TOOLS_DIR"
+          cat "$work/sdk.aa" "$work/sdk.ab" | tar -xz -C "$HARMONY_TOOLS_DIR"
+
+      - name: Cache OHOS Tauri CLI and ohrs
+        id: ohos-tools-cache
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/.ohos-tools
+          key: ohos-tools-richerfu-00c8756-ohrs-1.5.0-v1
+
+      - name: Install ohrs and richerfu tauri-cli (feat-openharmony)
+        if: steps.ohos-tools-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          CARGO_PROFILE_RELEASE_LTO=thin CARGO_PROFILE_RELEASE_CODEGEN_UNITS=8 \
+            cargo install ohrs --version 1.5.0 --locked --root /home/runner/.ohos-tools
+          CARGO_PROFILE_RELEASE_LTO=thin CARGO_PROFILE_RELEASE_CODEGEN_UNITS=8 \
+            cargo install tauri-cli \
+            --git https://github.com/richerfu/tauri \
+            --rev 00c8756 \
+            --root /home/runner/.ohos-tools \
+            --no-default-features --features native-tls
+
+      - uses: swatinem/rust-cache@v2.9.3
+        with:
+          workspaces: src-tauri -> target
+          prefix-key: ohos-exp-v1
+
+      - name: Configure OHOS cross-compilation environment
+        run: |
+          set -euo pipefail
+          echo "/home/runner/.ohos-tools/bin" >> "$GITHUB_PATH"
+          echo "$HARMONY_TOOLS_DIR/command-line-tools/bin" >> "$GITHUB_PATH"
+          OHOS_NATIVE_HOME="$OHOS_HOME/native"
+          wrapper_dir="$RUNNER_TEMP/ohos-compilers"
+          mkdir -p "$wrapper_dir"
+          for compiler in clang clang++; do
+            printf '#!/usr/bin/env bash\nexec "%s/llvm/bin/%s" --target=aarch64-linux-ohos --sysroot="%s/sysroot" -D__MUSL__ "$@"\n' \
+              "$OHOS_NATIVE_HOME" "$compiler" "$OHOS_NATIVE_HOME" > "$wrapper_dir/aarch64-$compiler"
+            chmod +x "$wrapper_dir/aarch64-$compiler"
+          done
+          {
+            echo "OHOS_NATIVE_HOME=$OHOS_NATIVE_HOME"
+            echo "CC_aarch64_unknown_linux_ohos=$wrapper_dir/aarch64-clang"
+            echo "CXX_aarch64_unknown_linux_ohos=$wrapper_dir/aarch64-clang++"
+            echo "AR_aarch64_unknown_linux_ohos=$OHOS_NATIVE_HOME/llvm/bin/llvm-ar"
+            echo "RANLIB_aarch64_unknown_linux_ohos=$OHOS_NATIVE_HOME/llvm/bin/llvm-ranlib"
+            echo "CXXSTDLIB_aarch64_unknown_linux_ohos=c++"
+            echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_OHOS_LINKER=$wrapper_dir/aarch64-clang"
+            echo "BINDGEN_EXTRA_CLANG_ARGS_aarch64_unknown_linux_ohos=--target=aarch64-linux-ohos --sysroot=$OHOS_NATIVE_HOME/sysroot -D__MUSL__"
+          } >> "$GITHUB_ENV"
+
+      - name: Verify tools and build frontend
+        run: |
+          set -euo pipefail
+          cargo tauri --version
+          ohrs --version
+          ohpm -v
+          hvigorw -v
+          pnpm build
+
+      - name: Build OpenHarmony unsigned HAP
+        run: |
+          set -euo pipefail
+          ROOT="$(pwd)"
+          cd src-tauri
+          cargo tauri ohos init --ci
+          set +e
+          cargo tauri ohos build \
+            --ci \
+            --target aarch64 \
+            --ignore-version-mismatches \
+            --config "{\"build\":{\"beforeBuildCommand\":\"pnpm --dir '${ROOT}' build\"}}"
+          build_rc=$?
+          set -e
+          echo "cargo tauri ohos build exited with: $build_rc"
+          hap_path="$ROOT/src-tauri/gen/ohos/entry/build/default/outputs/default/entry-default-unsigned.hap"
+          if [ ! -f "$hap_path" ]; then
+            echo "HAP not found at default path after tauri ohos build; trying direct ohpm + hvigorw assembly..."
+            cd "$ROOT/src-tauri/gen/ohos"
+            ohpm install
+            hvigorw clean --no-daemon
+            hvigorw assembleHap --no-daemon --stacktrace
+          fi
+          find "$ROOT/src-tauri/gen/ohos" -name "*.hap" -ls
+          test -f "$hap_path"
+          unzip -l "$hap_path" | grep -E "libhghubx_lib\.so|module\.json|ets/modules\.abc"
+
+      - name: Upload unsigned HAP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HGhubX-ohos-aarch64-unsigned-hap
+          path: src-tauri/gen/ohos/**/outputs/**/*.hap
+          if-no-files-found: error

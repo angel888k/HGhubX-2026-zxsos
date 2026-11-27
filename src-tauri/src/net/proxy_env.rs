@@ -25,7 +25,7 @@ pub(super) fn system_explicit_proxy() -> Option<String> {
     gnome_proxy()
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(target_env = "ohos")))]
 fn unquote(s: &str) -> String {
     let s = s.trim();
     if s.len() >= 2 && s.starts_with('\'') && s.ends_with('\'') {
@@ -36,7 +36,7 @@ fn unquote(s: &str) -> String {
 }
 
 /// 读 GNOME 系统代理配置（gsettings）。gsettings 不存在 / schema 缺失时返回 None。
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(target_env = "ohos")))]
 fn gsettings_get(schema: &str, key: &str) -> Option<String> {
     let out = std::process::Command::new("gsettings")
         .args(["get", schema, key])
@@ -48,7 +48,7 @@ fn gsettings_get(schema: &str, key: &str) -> Option<String> {
     Some(unquote(&String::from_utf8_lossy(&out.stdout)))
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(target_env = "ohos")))]
 fn format_proxy_url(scheme: &str, host: &str, port: &str) -> String {
     let host = if host.contains(':') && !host.starts_with('[') {
         format!("[{host}]")
@@ -60,7 +60,7 @@ fn format_proxy_url(scheme: &str, host: &str, port: &str) -> String {
 
 /// Linux 桌面（GNOME）的固定手动代理：`mode=manual` 时取 http，为空再试 socks。
 /// PAC（mode=auto）不支持，返回 None。
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", not(target_env = "ohos")))]
 pub(crate) fn gnome_proxy() -> Option<String> {
     if gsettings_get("org.gnome.system.proxy", "mode").as_deref() != Some("manual") {
         return None;
@@ -78,7 +78,7 @@ pub(crate) fn gnome_proxy() -> Option<String> {
     None
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(all(target_os = "linux", not(target_env = "ohos"))))]
 pub(crate) fn gnome_proxy() -> Option<String> {
     None
 }

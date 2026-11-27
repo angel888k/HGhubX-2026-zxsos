@@ -19,26 +19,27 @@ export const isIos =
   // iPadOS 13+ 默认把自己报成 MacIntel，只能靠触点数认
   (typeof navigator.platform === "string" && navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 export const isMacos = !isIos && /Macintosh|Mac OS X/i.test(ua);
+export const isHarmony = /OpenHarmony|HarmonyOS|ArkWeb/i.test(ua);
 /** Linux 桌面：webkit2gtk 的 UA 是「X11; Linux x86_64」。必须排在 Windows 之前判断，
- *  否则会被当成 Windows；而 Android 的 UA 里同样带「Linux」，所以必须先排除安卓。 */
-export const isLinux = !isAndroid && !isIos && !isMacos && /Linux|X11/i.test(ua);
-export const platform: "android" | "ios" | "windows" | "macos" | "linux" =
-  isAndroid ? "android" : isIos ? "ios" : isMacos ? "macos" : isLinux ? "linux" : "windows";
+ *  否则会被当成 Windows；而 Android / OpenHarmony 的 UA 里同样可能带「Linux」，必须先排除。 */
+export const isLinux = !isAndroid && !isIos && !isMacos && !isHarmony && /Linux|X11/i.test(ua);
+export const platform: "android" | "ios" | "windows" | "macos" | "linux" | "harmony" =
+  isAndroid ? "android" : isIos ? "ios" : isHarmony ? "harmony" : isMacos ? "macos" : isLinux ? "linux" : "windows";
 /** WebView 内核版本：能不能走 MSE、能解哪些封装，是「无法播放」的首要判据。
  *  安卓取 Chrome/xxx（System WebView），Linux/macOS 取 WebKit 的 Version/xxx。 */
 export const webviewVersion =
   /Chrome\/([\d.]+)/.exec(ua)?.[1] || /Version\/([\d.]+)/.exec(ua)?.[1] || "?";
-/** 移动端（安卓 / iOS）共用触屏界面 */
-export const isMobile = isAndroid || isIos;
+/** 移动端（安卓 / iOS / 鸿蒙手持设备）共用触屏界面 */
+export const isMobile = isAndroid || isIos || (isHarmony && !/\bPC\b/i.test(ua));
 
 /** 媒体基址随平台不同（Rust 侧对应 `media::LOCAL_ORIGIN`，两边必须一致）：
  *  Windows / Android → `http://<scheme>.localhost`（自定义协议，WebView 自己加载）
- *  macOS / iOS → `hg://localhost`（WebKit 的 scheme handler）
+ *  macOS / iOS / HarmonyOS → `hg://localhost`（原生 scheme handler）
  *  Linux → `http://127.0.0.1:17650`：WebKitGTK 的 <video> 由 GStreamer 播放，
  *          它拿不到自定义 scheme，所以由 Rust 侧在 loopback 上起 HTTP 代理
  *          （`src-tauri/src/linux_http.rs`，端口必须与此一致）。 */
 export const LOCAL =
-  isMacos || isIos ? "hg://localhost" : isLinux ? "http://127.0.0.1:17650" : "http://hg.localhost";
+  isMacos || isIos || isHarmony ? "hg://localhost" : isLinux ? "http://127.0.0.1:17650" : "http://hg.localhost";
 
 const SAFE_INLINE_IMAGE = /^data:image\/(?:svg\+xml|png|jpeg|webp|gif)(?:;charset=[^;,]+)?(?:;base64)?,/i;
 
