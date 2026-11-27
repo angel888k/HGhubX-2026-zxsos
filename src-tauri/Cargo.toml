@@ -103,7 +103,16 @@ rquickjs = { version = "0.14", features = ["bindgen"] }
 [target.'cfg(target_env = "ohos")'.dependencies]
 napi-ohos = "1.2"
 napi-derive-ohos = "1.2"
+ohos-accessibility-binding = "=0.2.0"
+ohos-arkui-binding = "=0.6.2"
+ohos-arkui-input-binding = "=0.2.0"
+ohos-image-native-binding = "=0.0.8"
+ohos-ime-binding = "=0.4.0"
+ohos-pasteboard-binding = "=0.0.8"
+ohos-udmf-binding = "=0.0.8"
+ohos-web-binding = "=0.3.2"
 ohos-window-manager-binding = "=0.1.2"
+ohos-xcomponent-binding = "=0.6.1"
 openharmony-ability = { git = "https://github.com/harmony-contrib/openharmony-ability", branch = "codex/complete-platform-capabilities" }
 
 [profile.release]
