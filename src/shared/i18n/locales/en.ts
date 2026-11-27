@@ -395,6 +395,7 @@ const en: Record<string, string> = {
   "暂无可用标签": "No available tags",
   "暂无可选标签": "No selectable tags",
   "暂无帖子内容": "No posts available",
+  "暂无帖子分类": "No post categories yet",
   "暂无播放地址": "No playback stream available",
   "暂无标签": "No tags",
   "暂无热搜影片": "No trending videos",
