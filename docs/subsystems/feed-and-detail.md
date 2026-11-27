@@ -41,9 +41,13 @@ Feed 负责列表播放页的条目位置、详情/帖子读取、标签门、�
 ## 主运行时路径
 
 1. Feed 使用 `api_feed`/分类/搜索/list page 传入的 `videoIds`，不自行重新请求列表；
-   首页 [`src/features/feed/Home.tsx`](../../src/features/feed/Home.tsx) 在内容偏好 `pinnedTags`
-   非空时，按并发上限 4 从置顶标签分批调用 `api.tagVideos(tag, page, 30)` 去重并随机洗牌推送，
-   置顶标签变化时重置首页列表并丢弃旧作用域在途结果；未置顶任何标签时保持原有 `api.feed` 规则（#269）。
+   首页 [`src/features/feed/Home.tsx`](../../src/features/feed/Home.tsx) 与
+   [`src/features/feed/homeRandom.ts`](../../src/features/feed/homeRandom.ts) 按源缓存已知总页数
+   （`STORAGE_KEYS.homePages` / `hghubx_home_pages_v1`），在默认首页（页池上限 120 页）与置顶标签
+   （`pinnedTags` 非空时每标签页池上限 40 页、并发上限 4 调用 `api.tagVideos`）均构建去重随机页码队列，
+   优先展示近期未看过的新条目并避开连续重复首抽页；首次未知总页数时仍只发第 1 页请求，随机页为空时
+   自动回退第 1 页；再次点击已激活的「首页」导航项派发 `hg:home-refresh` 换一批推荐（失败保留当前列表与页码队列）；
+   请求作用域包含 `accountScope`、`lineEpoch` 与 `pinnedKey`，旧作用域在途结果一律丢弃。
    当前条目由 `position` 与 `effectiveVideoIds` 锚定；列表变化时优先保持正在播放的 id，
    找不到才取相邻可见项。
 2. 详情读取走 `useFeedDetails.requestDetail(id)`。single-flight key 是
