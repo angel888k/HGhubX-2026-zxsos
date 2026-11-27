@@ -7,7 +7,6 @@
     "core:default",
     "clipboard-manager:allow-write-text",
     "clipboard-manager:allow-read-text",
-    "core:app:allow-exit",
     "core:window:allow-start-dragging",
     "core:window:allow-start-resize-dragging",
     "core:window:allow-minimize",
