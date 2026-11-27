@@ -914,6 +914,7 @@ const en: Record<string, string> = {
   "收藏已刷新": "Favorites refreshed",
   "发现 {0} 部收藏更新，新增 {1} 集": "{0} favorite(s) updated · {1} new episode(s)",
   "收藏已刷新，暂无新集更新": "Favorites refreshed; no new episodes yet",
+  "已换一批推荐": "Refreshed recommendations",
   "切镜头": "Switch Lens",
   "试用离线示例源": "Try Offline Demo Source",
   "试用": "Try Demo",
